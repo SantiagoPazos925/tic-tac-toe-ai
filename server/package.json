@@ -8,8 +8,7 @@
         "start": "node dist/index.js",
         "dev": "tsx index.ts",
         "build": "tsc",
-        "watch": "tsx watch index.ts",
-        "postinstall": "npm run build"
+        "watch": "tsx watch index.ts"
     },
     "dependencies": {
         "cors": "^2.8.5",
