@@ -1,25 +1,27 @@
 {
-  "name": "tic-tac-toe-server",
-  "version": "1.0.0",
-  "description": "Servidor para el juego Tic-Tac-Toe multijugador",
-  "main": "index.js",
+  "name": "tic-tac-toe-ai",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "tsx index.ts",
-    "build": "tsc",
-    "watch": "tsx watch index.ts"
+    "dev": "vite",
+    "dev:server": "cd server && npm run dev",
+    "dev:all": "concurrently \"npm run dev:server\" \"npm run dev\"",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2"
+    "@google/genai": "^1.8.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.13",
-    "@types/express": "^4.17.17",
-    "ts-node": "^10.9.1",
-    "tsx": "^4.20.3",
-    "typescript": "^5.0.0"
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^9.2.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
   }
 }
