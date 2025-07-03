@@ -19,6 +19,11 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoint para Fly.io
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Almacenar las salas de juego
 interface GameRoom {
     id: string;

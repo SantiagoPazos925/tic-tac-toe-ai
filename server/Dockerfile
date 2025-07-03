@@ -2,14 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
-COPY package*.json ./
-
-# Instalar dependencias (sin ejecutar postinstall/build)
-RUN npm install
-
-# Copiar el resto del código fuente
+# Copiar todo el código fuente y archivos de configuración
 COPY . .
+
+# Instalar dependencias
+RUN npm install
 
 # Construir TypeScript
 RUN npm run build
