@@ -37,7 +37,8 @@
     "hooks/**/*",
     "services/**/*",
     "types.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "vite-env.d.ts"
   ],
   "exclude": [
     "server/**/*",
