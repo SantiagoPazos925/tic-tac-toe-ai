@@ -28,6 +28,8 @@ export const useSocket = () => {
     const [roomId, setRoomId] = useState<string>('');
     const [isWaiting, setIsWaiting] = useState(false);
     const [error, setError] = useState<string>('');
+    const [latency, setLatency] = useState<number>(0);
+    const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         // Conectar al servidor
@@ -39,6 +41,9 @@ export const useSocket = () => {
         socket.on('connect', () => {
             setIsConnected(true);
             setError('');
+
+            // Iniciar medición de latencia
+            startLatencyMeasurement();
         });
 
         socket.on('disconnect', () => {
@@ -103,10 +108,35 @@ export const useSocket = () => {
             setError('Esta sala está llena');
         });
 
+        // Manejar pong para calcular latencia
+        socket.on('pong', () => {
+            const endTime = Date.now();
+            const pingTime = endTime - (socket as any).pingStartTime;
+            setLatency(pingTime);
+        });
+
         return () => {
+            // Limpiar intervalo de ping
+            if (pingIntervalRef.current) {
+                clearInterval(pingIntervalRef.current);
+            }
             socket.disconnect();
         };
     }, []);
+
+    // Función para medir latencia
+    const startLatencyMeasurement = () => {
+        if (pingIntervalRef.current) {
+            clearInterval(pingIntervalRef.current);
+        }
+
+        pingIntervalRef.current = setInterval(() => {
+            if (socketRef.current && socketRef.current.connected) {
+                (socketRef.current as any).pingStartTime = Date.now();
+                socketRef.current.emit('ping');
+            }
+        }, 5000); // Medir cada 5 segundos
+    };
 
     const joinRoom = (roomId: string) => {
         if (socketRef.current) {
@@ -149,6 +179,7 @@ export const useSocket = () => {
         roomId,
         isWaiting,
         error,
+        latency,
         joinRoom,
         makeMove,
         restartGame,

@@ -55,6 +55,11 @@ function checkWinner(board: string[]): string | null {
 io.on('connection', (socket) => {
     console.log('Usuario conectado:', socket.id);
 
+    // Manejar ping para medir latencia
+    socket.on('ping', () => {
+        socket.emit('pong');
+    });
+
     // Unirse a una sala
     socket.on('joinRoom', (roomId: string) => {
         socket.join(roomId);
