@@ -128,9 +128,6 @@ io.on('connection', (socket) => {
                 winner: winner === 'tie' ? null : winner,
                 isTie: winner === 'tie'
             });
-
-            // Limpiar la sala
-            gameRooms.delete(roomId);
         } else {
             // Cambiar turno
             room.currentPlayer = room.players[(playerIndex + 1) % 2];
