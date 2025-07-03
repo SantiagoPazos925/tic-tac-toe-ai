@@ -104,6 +104,49 @@ tic-tac-toe-ai/
 - **Manejo de desconexiones** automático
 - **Interfaz responsive** para móviles y desktop
 - **Animaciones suaves** con CSS transitions
+- **Sistema de medición de latencia** en tiempo real
+- **Indicadores de calidad de conexión**
+
+## 🚀 Deploy
+
+### Frontend (Vercel)
+El frontend está configurado para deploy automático en Vercel.
+
+### Backend (Fly.io) - Recomendado
+Para obtener la mejor latencia desde Argentina, usa Fly.io:
+
+#### Deploy Automático (Windows)
+```powershell
+# Ejecutar el script de deploy
+.\deploy-fly.ps1
+```
+
+#### Deploy Manual
+1. **Instalar Fly CLI**:
+   ```powershell
+   iwr https://fly.io/install.ps1 -useb | iex
+   ```
+
+2. **Login**:
+   ```bash
+   fly auth login
+   ```
+
+3. **Deploy**:
+   ```bash
+   cd server
+   fly deploy
+   ```
+
+#### Configuración
+- **URL**: https://tic-tac-toe-ai-server.fly.dev
+- **Región**: São Paulo (latencia ~30-50ms a Argentina)
+- **Plan**: Gratis (3 VMs + 160GB transferencia)
+
+### Backend (Render) - Alternativa
+Si prefieres mantener Render:
+- **URL**: https://tu-app.onrender.com
+- **Plan**: 750 horas/mes gratis
 
 ## 🤝 Contribuir
 
