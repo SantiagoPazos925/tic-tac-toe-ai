@@ -9,7 +9,8 @@ const io = new Server(httpServer, {
     cors: {
         origin: [
             "http://localhost:5173",
-            "https://tic-tac-toe-ai-ochre.vercel.app"
+            "https://tic-tac-toe-ai-ochre.vercel.app",
+            "https://tic-tac-toe-ai-server.fly.dev"
         ],
         methods: ["GET", "POST"]
     }
