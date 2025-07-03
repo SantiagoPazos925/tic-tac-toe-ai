@@ -2,9 +2,10 @@ Write-Host "🚀 Iniciando deploy en Fly.io..." -ForegroundColor Green
 
 # Verificar si Fly CLI está instalado
 try {
-    fly --version | Out-Null
+    $null = fly --version
     Write-Host "✅ Fly CLI encontrado" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "❌ Fly CLI no está instalado. Instalando..." -ForegroundColor Red
     Write-Host "Ejecutando: iwr https://fly.io/install.ps1 -useb | iex" -ForegroundColor Yellow
     Invoke-WebRequest -Uri "https://fly.io/install.ps1" -UseBasicParsing | Invoke-Expression
@@ -14,9 +15,10 @@ try {
 
 # Verificar si el usuario está logueado
 try {
-    fly auth whoami | Out-Null
+    $null = fly auth whoami
     Write-Host "✅ Usuario autenticado" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "🔐 Iniciando login en Fly.io..." -ForegroundColor Yellow
     fly auth login
 }
