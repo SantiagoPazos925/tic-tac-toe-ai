@@ -9,7 +9,7 @@ const io = new Server(httpServer, {
     cors: {
         origin: [
             "http://localhost:5173",
-            "https://tic-tac-toe-b9ucaovyz-santiagopazos925s-projects.vercel.app"
+            "https://tic-tac-toe-ocnqb162l-santiagopazos925s-projects.vercel.app"
         ],
         methods: ["GET", "POST"]
     }
