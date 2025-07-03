@@ -14,16 +14,16 @@ primary_region = 'gru'
   PORT = '3001'
 
 [[services]]
+  protocol = 'tcp'
   internal_port = 3001
-  protocol = "tcp"
 
   [[services.ports]]
     port = 80
-    handlers = ["http"]
+    handlers = ['http']
 
   [[services.ports]]
     port = 443
-    handlers = ["tls", "http"]
+    handlers = ['tls', 'http']
 
   [services.concurrency]
     type = 'connections'
@@ -38,4 +38,4 @@ primary_region = 'gru'
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
-  cpus = 1 
+  cpus = 1

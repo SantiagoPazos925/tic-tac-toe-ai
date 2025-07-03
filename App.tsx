@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { BoardState } from './types';
 import Board from './components/Board';
 import Lobby from './components/Lobby';

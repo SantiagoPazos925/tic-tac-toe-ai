@@ -9,7 +9,7 @@ const getAiMove = async (board: BoardState): Promise<number> => {
         console.warn("API_KEY not found. Using fallback AI.");
         return getFallbackAiMove(board);
     }
-
+  
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const systemInstruction = `You are an unbeatable Tic-Tac-Toe AI player. Your name is Gemini. You play as 'O'.
@@ -31,8 +31,8 @@ Respond with only a JSON object containing the index of your move, like \`{"move
                 thinkingConfig: { thinkingBudget: 0 } // low latency
             },
         });
-
-        let jsonStr = (response.text || '').trim();
+        
+        let jsonStr = response.text.trim();
         const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
         const match = jsonStr.match(fenceRegex);
         if (match && match[2]) {
