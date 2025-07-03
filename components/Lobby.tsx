@@ -1,17 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import io from 'socket.io-client';
 
 interface LobbyProps {
     onJoinRoom: (roomId: string) => void;
     onCreateRoom: () => void;
 }
 
+interface RoomInfo {
+    id: string;
+    players: number;
+    gameStarted: boolean;
+}
+
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+    transports: ['websocket'],
+});
+
 const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
     const [roomId, setRoomId] = useState('');
+    const [rooms, setRooms] = useState<RoomInfo[]>([]);
+    const [loadingRooms, setLoadingRooms] = useState(true);
+
+    useEffect(() => {
+        // Solicitar la lista de salas al montar
+        socket.emit('getRooms');
+        setLoadingRooms(true);
+
+        // Recibir la lista de salas
+        socket.on('roomsList', (roomsList: RoomInfo[]) => {
+            setRooms(roomsList);
+            setLoadingRooms(false);
+        });
+
+        // Refrescar la lista cuando se actualiza en el backend
+        socket.on('roomsUpdated', () => {
+            socket.emit('getRooms');
+        });
+
+        return () => {
+            socket.off('roomsList');
+            socket.off('roomsUpdated');
+        };
+    }, []);
 
     const handleJoinRoom = () => {
         if (roomId.trim()) {
             onJoinRoom(roomId.trim());
         }
+    };
+
+    const handleJoinAvailableRoom = (id: string) => {
+        onJoinRoom(id);
     };
 
     const generateRandomRoomId = () => {
@@ -75,6 +114,34 @@ const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
                             Crear nueva sala
                         </button>
                     </div>
+                </div>
+
+                <div className="mt-8">
+                    <h3 className="text-lg font-semibold text-gray-200 mb-2">Salas disponibles</h3>
+                    {loadingRooms ? (
+                        <div className="text-gray-400">Cargando salas...</div>
+                    ) : rooms.length === 0 ? (
+                        <div className="text-gray-400">No hay salas disponibles.</div>
+                    ) : (
+                        <ul className="space-y-2">
+                            {rooms.map((room) => (
+                                <li key={room.id} className="flex items-center justify-between bg-gray-700 rounded-lg px-4 py-2">
+                                    <div>
+                                        <span className="font-mono text-teal-300">{room.id}</span>
+                                        <span className="ml-3 text-gray-300">{room.players}/2</span>
+                                        {room.gameStarted && <span className="ml-2 text-xs text-yellow-400">En juego</span>}
+                                    </div>
+                                    <button
+                                        onClick={() => handleJoinAvailableRoom(room.id)}
+                                        disabled={room.players >= 2 || room.gameStarted}
+                                        className="px-3 py-1 bg-teal-500 text-white rounded-lg font-bold hover:bg-teal-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Unirse
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
 
                 <div className="mt-6 text-center">

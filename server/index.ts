@@ -24,6 +24,16 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Endpoint para obtener la lista de salas y cantidad de jugadores
+app.get('/rooms', (req, res) => {
+    const rooms = Array.from(gameRooms.values()).map(room => ({
+        id: room.id,
+        players: room.players.length,
+        gameStarted: room.gameStarted
+    }));
+    res.json(rooms);
+});
+
 // Almacenar las salas de juego
 interface GameRoom {
     id: string;
@@ -66,10 +76,21 @@ io.on('connection', (socket) => {
         socket.emit('pong');
     });
 
+    // Evento para obtener la lista de salas en tiempo real
+    socket.on('getRooms', () => {
+        const rooms = Array.from(gameRooms.values()).map(room => ({
+            id: room.id,
+            players: room.players.length,
+            gameStarted: room.gameStarted
+        }));
+        socket.emit('roomsList', rooms);
+    });
+
     // Unirse a una sala
     socket.on('joinRoom', (roomId: string) => {
         socket.join(roomId);
 
+        let isNewRoom = false;
         if (!gameRooms.has(roomId)) {
             // Crear nueva sala
             gameRooms.set(roomId, {
@@ -79,6 +100,7 @@ io.on('connection', (socket) => {
                 currentPlayer: socket.id,
                 gameStarted: false
             });
+            isNewRoom = true;
             socket.emit('playerJoined', { playerNumber: 1, symbol: 'X' });
         } else {
             const room = gameRooms.get(roomId)!;
@@ -97,6 +119,10 @@ io.on('connection', (socket) => {
                 // Sala llena
                 socket.emit('roomFull');
             }
+        }
+        // Notificar a todos los clientes que la lista de salas cambió
+        if (isNewRoom) {
+            io.emit('roomsUpdated');
         }
     });
 
@@ -160,7 +186,6 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('Usuario desconectado:', socket.id);
 
-        // Remover jugador de todas las salas
         for (const [roomId, room] of gameRooms.entries()) {
             const playerIndex = room.players.indexOf(socket.id);
             if (playerIndex !== -1) {
@@ -169,6 +194,8 @@ io.on('connection', (socket) => {
                 if (room.players.length === 0) {
                     // Eliminar sala vacía
                     gameRooms.delete(roomId);
+                    // Notificar a todos los clientes que la lista de salas cambió
+                    io.emit('roomsUpdated');
                 } else {
                     // Notificar al otro jugador
                     io.to(roomId).emit('playerDisconnected');
