@@ -9,7 +9,7 @@
     "dev:all": "concurrently \"npm run dev:server\" \"npm run dev\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "vercel-build": "npm install @rollup/rollup-linux-x64-gnu && npm run build"
+    "vercel-build": "npm install @rollup/rollup-linux-x64-gnu @esbuild/linux-x64 && npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.8.0",
@@ -28,6 +28,9 @@
   "overrides": {
     "rollup": {
       "@rollup/rollup-linux-x64-gnu": "4.13.0"
+    },
+    "esbuild": {
+      "@esbuild/linux-x64": "0.20.8"
     }
   }
 }
