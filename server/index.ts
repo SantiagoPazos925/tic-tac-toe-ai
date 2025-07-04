@@ -45,6 +45,7 @@ app.get('*', (req, res) => {
 interface GameRoom {
     id: string;
     players: string[];
+    playerNames: Map<string, string>; // Mapa de socket.id a nombre del jugador
     board: string[];
     currentPlayer: string;
     gameStarted: boolean;
@@ -94,7 +95,8 @@ io.on('connection', (socket) => {
     });
 
     // Unirse a una sala
-    socket.on('joinRoom', (roomId: string) => {
+    socket.on('joinRoom', (data: { roomId: string, playerName: string }) => {
+        const { roomId, playerName } = data;
         socket.join(roomId);
 
         let isNewRoom = false;
@@ -103,6 +105,7 @@ io.on('connection', (socket) => {
             gameRooms.set(roomId, {
                 id: roomId,
                 players: [socket.id],
+                playerNames: new Map([[socket.id, playerName]]),
                 board: Array(9).fill(null),
                 currentPlayer: socket.id,
                 gameStarted: false
@@ -114,13 +117,18 @@ io.on('connection', (socket) => {
             if (room.players.length < 2) {
                 // Segundo jugador se une
                 room.players.push(socket.id);
+                room.playerNames.set(socket.id, playerName);
                 room.gameStarted = true;
                 socket.emit('playerJoined', { playerNumber: 2, symbol: 'O' });
 
                 // Notificar a ambos jugadores que el juego comenzó
                 io.to(roomId).emit('gameStarted', {
                     board: room.board,
-                    currentPlayer: room.currentPlayer
+                    currentPlayer: room.currentPlayer,
+                    playerNames: {
+                        player1: room.playerNames.get(room.players[0]) || 'Jugador 1',
+                        player2: room.playerNames.get(room.players[1]) || 'Jugador 2'
+                    }
                 });
             } else {
                 // Sala llena
@@ -169,7 +177,11 @@ io.on('connection', (socket) => {
             io.to(roomId).emit('moveMade', {
                 board: room.board,
                 currentPlayer: room.currentPlayer,
-                lastMove: { index, symbol }
+                lastMove: { index, symbol },
+                playerNames: {
+                    player1: room.playerNames.get(room.players[0]) || 'Jugador 1',
+                    player2: room.playerNames.get(room.players[1]) || 'Jugador 2'
+                }
             });
         }
     });
@@ -184,7 +196,11 @@ io.on('connection', (socket) => {
 
             io.to(roomId).emit('gameRestarted', {
                 board: room.board,
-                currentPlayer: room.currentPlayer
+                currentPlayer: room.currentPlayer,
+                playerNames: {
+                    player1: room.playerNames.get(room.players[0]) || 'Jugador 1',
+                    player2: room.playerNames.get(room.players[1]) || 'Jugador 2'
+                }
             });
         }
     });

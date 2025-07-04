@@ -6,6 +6,10 @@ interface RoomStatusProps {
     symbol: string;
     isWaiting: boolean;
     onCopyRoomId: () => void;
+    playerNames?: {
+        player1: string;
+        player2: string;
+    };
 }
 
 const RoomStatus: React.FC<RoomStatusProps> = ({
@@ -13,7 +17,8 @@ const RoomStatus: React.FC<RoomStatusProps> = ({
     playerNumber,
     symbol,
     isWaiting,
-    onCopyRoomId
+    onCopyRoomId,
+    playerNames
 }) => {
     return (
         <div className="bg-gray-800 rounded-lg p-6 shadow-xl mb-6">
@@ -25,7 +30,12 @@ const RoomStatus: React.FC<RoomStatusProps> = ({
                 <div className="flex items-center justify-center space-x-4 mb-4">
                     <div className="text-center">
                         <div className="text-4xl font-bold text-teal-400 mb-2">{symbol}</div>
-                        <div className="text-gray-400">Jugador {playerNumber}</div>
+                        <div className="text-gray-400">
+                            {playerNames ?
+                                (playerNumber === 1 ? playerNames.player1 : playerNames.player2) :
+                                `Jugador ${playerNumber}`
+                            }
+                        </div>
                     </div>
                 </div>
 

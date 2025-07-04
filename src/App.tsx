@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { BoardState } from './types';
 import Board from './components/Board';
 import Lobby from './components/Lobby';
+import PlayerNameInput from './components/PlayerNameInput';
 import RoomStatus from './components/RoomStatus';
 import { ConnectionStats } from './components/ConnectionStats';
 import { useSocket } from './hooks/useSocket';
 
-type GameMode = 'lobby' | 'game';
+type GameMode = 'name-input' | 'lobby' | 'game';
 
 function App() {
-  const [gameMode, setGameMode] = useState<GameMode>('lobby');
+  const [gameMode, setGameMode] = useState<GameMode>('name-input');
+  const [playerName, setPlayerName] = useState('');
   const {
     isConnected,
     gameState,
@@ -26,14 +28,19 @@ function App() {
     leaveRoom
   } = useSocket();
 
-  const handleJoinRoom = (roomId: string) => {
-    joinRoom(roomId);
+  const handleNameSubmit = (name: string) => {
+    setPlayerName(name);
+    setGameMode('lobby');
+  };
+
+  const handleJoinRoom = (roomId: string, playerName: string) => {
+    joinRoom(roomId, playerName);
     setGameMode('game');
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = (playerName: string) => {
     const randomRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    joinRoom(randomRoomId);
+    joinRoom(randomRoomId, playerName);
     setGameMode('game');
   };
 
@@ -59,15 +66,24 @@ function App() {
   };
 
   const getStatusMessage = (): string => {
-    if (gameState.winner) return `¡Ganador: ${gameState.winner}!`;
+    if (gameState.winner) {
+      const winnerName = playerInfo?.playerNames ?
+        (gameState.winner === 'X' ? playerInfo.playerNames.player1 : playerInfo.playerNames.player2) :
+        gameState.winner;
+      return `¡Ganador: ${winnerName}!`;
+    }
     if (gameState.isTie) return "¡Es un empate!";
     if (!gameState.gameStarted) return "Esperando al segundo jugador...";
     if (isMyTurn()) return "Tu turno";
     return "Turno del oponente";
   };
 
+  if (gameMode === 'name-input') {
+    return <PlayerNameInput onSubmit={handleNameSubmit} onCancel={() => { }} />;
+  }
+
   if (gameMode === 'lobby') {
-    return <Lobby onJoinRoom={handleJoinRoom} onCreateRoom={handleCreateRoom} />;
+    return <Lobby onJoinRoom={handleJoinRoom} onCreateRoom={handleCreateRoom} playerName={playerName} />;
   }
 
   return (
@@ -105,6 +121,7 @@ function App() {
           symbol={playerInfo.symbol}
           isWaiting={isWaiting}
           onCopyRoomId={handleCopyRoomId}
+          playerNames={playerInfo.playerNames}
         />
       )}
 

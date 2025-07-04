@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSocket } from '../hooks/useSocket';
 
 interface LobbyProps {
-    onJoinRoom: (roomId: string) => void;
-    onCreateRoom: () => void;
+    onJoinRoom: (roomId: string, playerName: string) => void;
+    onCreateRoom: (playerName: string) => void;
+    playerName: string;
 }
 
 interface RoomInfo {
@@ -12,7 +13,7 @@ interface RoomInfo {
     gameStarted: boolean;
 }
 
-const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
+const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom, playerName }) => {
     const [roomId, setRoomId] = useState('');
     const [rooms, setRooms] = useState<RoomInfo[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
@@ -47,12 +48,12 @@ const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
 
     const handleJoinRoom = () => {
         if (roomId.trim()) {
-            onJoinRoom(roomId.trim());
+            onJoinRoom(roomId.trim(), playerName);
         }
     };
 
     const handleJoinAvailableRoom = (id: string) => {
-        onJoinRoom(id);
+        onJoinRoom(id, playerName);
     };
 
     const generateRandomRoomId = () => {
@@ -110,7 +111,7 @@ const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
 
                     <div>
                         <button
-                            onClick={onCreateRoom}
+                            onClick={() => onCreateRoom(playerName)}
                             className="w-full px-6 py-3 bg-gradient-to-r from-purple-400 to-pink-600 text-white font-bold rounded-lg shadow-lg hover:scale-105 transform transition-transform duration-300 ease-in-out"
                         >
                             Crear nueva sala

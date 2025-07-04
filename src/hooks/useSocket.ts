@@ -12,6 +12,11 @@ interface GameState {
 interface PlayerInfo {
     playerNumber: number;
     symbol: string;
+    name?: string;
+    playerNames?: {
+        player1: string;
+        player2: string;
+    };
 }
 
 export const useSocket = () => {
@@ -58,7 +63,7 @@ export const useSocket = () => {
             setIsWaiting(true);
         });
 
-        socket.on('gameStarted', (state: { board: string[], currentPlayer: string }) => {
+        socket.on('gameStarted', (state: { board: string[], currentPlayer: string, playerNames?: { player1: string, player2: string } }) => {
             setGameState(prev => ({
                 ...prev,
                 board: state.board,
@@ -66,18 +71,35 @@ export const useSocket = () => {
                 gameStarted: true
             }));
             setIsWaiting(false);
+
+            // Actualizar información del jugador con nombres si está disponible
+            if (state.playerNames) {
+                setPlayerInfo(prev => prev ? {
+                    ...prev,
+                    playerNames: state.playerNames
+                } : null);
+            }
         });
 
         socket.on('moveMade', (data: {
             board: string[],
             currentPlayer: string,
-            lastMove: { index: number, symbol: string }
+            lastMove: { index: number, symbol: string },
+            playerNames?: { player1: string, player2: string }
         }) => {
             setGameState(prev => ({
                 ...prev,
                 board: data.board,
                 currentPlayer: data.currentPlayer
             }));
+
+            // Actualizar información del jugador con nombres si está disponible
+            if (data.playerNames) {
+                setPlayerInfo(prev => prev ? {
+                    ...prev,
+                    playerNames: data.playerNames
+                } : null);
+            }
         });
 
         socket.on('gameOver', (data: {
@@ -93,7 +115,7 @@ export const useSocket = () => {
             }));
         });
 
-        socket.on('gameRestarted', (state: { board: string[], currentPlayer: string }) => {
+        socket.on('gameRestarted', (state: { board: string[], currentPlayer: string, playerNames?: { player1: string, player2: string } }) => {
             setGameState({
                 board: state.board,
                 currentPlayer: state.currentPlayer,
@@ -101,6 +123,14 @@ export const useSocket = () => {
                 isTie: false,
                 gameStarted: true
             });
+
+            // Actualizar información del jugador con nombres si está disponible
+            if (state.playerNames) {
+                setPlayerInfo(prev => prev ? {
+                    ...prev,
+                    playerNames: state.playerNames
+                } : null);
+            }
         });
 
         socket.on('playerDisconnected', () => {
@@ -141,9 +171,9 @@ export const useSocket = () => {
         }, 5000); // Medir cada 5 segundos
     };
 
-    const joinRoom = (roomId: string) => {
+    const joinRoom = (roomId: string, playerName: string) => {
         if (socketRef.current) {
-            socketRef.current.emit('joinRoom', roomId);
+            socketRef.current.emit('joinRoom', { roomId, playerName });
             setRoomId(roomId);
             setError('');
         }
