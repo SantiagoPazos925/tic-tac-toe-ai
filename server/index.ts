@@ -2,6 +2,11 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
@@ -10,7 +15,7 @@ const io = new Server(httpServer, {
         origin: [
             "http://localhost:5173",
             "https://tic-tac-toe-ai-ochre.vercel.app",
-            "https://tic-tac-toe-ai-server.fly.dev"
+            ...(process.env.RAILWAY_PUBLIC_DOMAIN ? [`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`] : [])
         ],
         methods: ["GET", "POST"]
     }
@@ -19,19 +24,21 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint para Fly.io
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Health check endpoint para Railway
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
 });
 
-// Endpoint para obtener la lista de salas y cantidad de jugadores
-app.get('/rooms', (req, res) => {
-    const rooms = Array.from(gameRooms.values()).map(room => ({
-        id: room.id,
-        players: room.players.length,
-        gameStarted: room.gameStarted
-    }));
-    res.json(rooms);
+// Ruta para servir el frontend (SPA)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Almacenar las salas de juego

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
+import { useSocket } from '../hooks/useSocket';
 
 interface LobbyProps {
     onJoinRoom: (roomId: string) => void;
@@ -12,36 +12,38 @@ interface RoomInfo {
     gameStarted: boolean;
 }
 
-const socket = io(import.meta.env.VITE_SOCKET_URL, {
-    transports: ['websocket'],
-});
-
 const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
     const [roomId, setRoomId] = useState('');
     const [rooms, setRooms] = useState<RoomInfo[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
+    const { isConnected } = useSocket();
 
     useEffect(() => {
+        if (!isConnected) return;
+
         // Solicitar la lista de salas al montar
-        socket.emit('getRooms');
-        setLoadingRooms(true);
-
-        // Recibir la lista de salas
-        socket.on('roomsList', (roomsList: RoomInfo[]) => {
-            setRooms(roomsList);
-            setLoadingRooms(false);
-        });
-
-        // Refrescar la lista cuando se actualiza en el backend
-        socket.on('roomsUpdated', () => {
+        const socket = (window as any).socket;
+        if (socket) {
             socket.emit('getRooms');
-        });
+            setLoadingRooms(true);
 
-        return () => {
-            socket.off('roomsList');
-            socket.off('roomsUpdated');
-        };
-    }, []);
+            // Recibir la lista de salas
+            socket.on('roomsList', (roomsList: RoomInfo[]) => {
+                setRooms(roomsList);
+                setLoadingRooms(false);
+            });
+
+            // Refrescar la lista cuando se actualiza en el backend
+            socket.on('roomsUpdated', () => {
+                socket.emit('getRooms');
+            });
+
+            return () => {
+                socket.off('roomsList');
+                socket.off('roomsUpdated');
+            };
+        }
+    }, [isConnected]);
 
     const handleJoinRoom = () => {
         if (roomId.trim()) {
@@ -118,7 +120,9 @@ const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
 
                 <div className="mt-8">
                     <h3 className="text-lg font-semibold text-gray-200 mb-2">Salas disponibles</h3>
-                    {loadingRooms ? (
+                    {!isConnected ? (
+                        <div className="text-gray-400">Conectando al servidor...</div>
+                    ) : loadingRooms ? (
                         <div className="text-gray-400">Cargando salas...</div>
                     ) : rooms.length === 0 ? (
                         <div className="text-gray-400">No hay salas disponibles.</div>

@@ -36,6 +36,9 @@ export const useSocket = () => {
         const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
         socketRef.current = io(socketUrl);
 
+        // Exponer el socket globalmente para que otros componentes puedan acceder
+        (window as any).socket = socketRef.current;
+
         const socket = socketRef.current;
 
         socket.on('connect', () => {

@@ -6,6 +6,14 @@ README.md
 .env
 .nyc_output
 coverage
+.nyc_output
+.coverage
+.cache
+dist
+build
 .DS_Store
 *.log
-dist 
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local 

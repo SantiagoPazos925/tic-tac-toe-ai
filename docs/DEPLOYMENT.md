@@ -4,7 +4,7 @@ Esta guía te ayudará a desplegar tu juego multijugador en la nube para que otr
 
 ## 🌐 Opciones de Hosting Recomendadas
 
-### **Opción 1: Vercel + Railway (Más Fácil)**
+### **Opción 1: Railway (Recomendado)**
 
 #### **Frontend (Vercel) - GRATIS**
 1. **Crea una cuenta** en [vercel.com](https://vercel.com)
@@ -24,27 +24,6 @@ Esta guía te ayudará a desplegar tu juego multijugador en la nube para que otr
    PORT=3001
    NODE_ENV=production
    ```
-5. **Despliega** automáticamente
-
-### **Opción 2: Netlify + Render (Alternativa Gratuita)**
-
-#### **Frontend (Netlify) - GRATIS**
-1. **Crea una cuenta** en [netlify.com](https://netlify.com)
-2. **Conecta tu repositorio** de GitHub
-3. **Configura las variables de entorno**:
-   ```
-   VITE_SOCKET_URL=https://tu-servidor.onrender.com
-   ```
-4. **Despliega** automáticamente
-
-#### **Backend (Render) - GRATIS**
-1. **Crea una cuenta** en [render.com](https://render.com)
-2. **Crea un nuevo Web Service**
-3. **Conecta tu repositorio** de GitHub
-4. **Configura**:
-   - **Build Command**: `cd server && npm install && npm run build`
-   - **Start Command**: `cd server && npm start`
-   - **Root Directory**: `server`
 5. **Despliega** automáticamente
 
 ## 📋 Pasos Previos al Despliegue
@@ -158,8 +137,6 @@ Si hay errores de build:
 
 - **Vercel**: Gratis (hasta 100GB/mes)
 - **Railway**: $5/mes (muy económico)
-- **Netlify**: Gratis
-- **Render**: Gratis (con limitaciones)
 
 ## 🎯 Próximos Pasos
 

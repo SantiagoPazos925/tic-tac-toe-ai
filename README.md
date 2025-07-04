@@ -73,19 +73,35 @@ npm run dev
 
 ```
 tic-tac-toe-ai/
-├── components/          # Componentes React
-│   ├── Board.tsx       # Tablero del juego
-│   ├── Square.tsx      # Casillas individuales
-│   ├── Lobby.tsx       # Pantalla de lobby
-│   └── RoomStatus.tsx  # Estado de la sala
-├── hooks/              # Hooks personalizados
-│   └── useSocket.ts    # Hook para Socket.io
-├── server/             # Servidor backend
-│   ├── index.ts        # Servidor principal
-│   └── package.json    # Dependencias del servidor
-├── services/           # Servicios
-├── types.ts           # Tipos TypeScript
-└── App.tsx            # Componente principal
+├── src/                    # Código fuente del frontend
+│   ├── components/         # Componentes React
+│   │   ├── Board.tsx      # Tablero del juego
+│   │   ├── Square.tsx     # Casillas individuales
+│   │   ├── Lobby.tsx      # Pantalla de lobby
+│   │   └── RoomStatus.tsx # Estado de la sala
+│   ├── hooks/             # Hooks personalizados
+│   │   └── useSocket.ts   # Hook para Socket.io
+│   ├── services/          # Servicios
+│   ├── types.ts          # Tipos TypeScript
+│   ├── App.tsx           # Componente principal
+│   └── index.tsx         # Punto de entrada
+├── server/                # Servidor backend
+│   ├── index.ts          # Servidor principal
+│   ├── package.json      # Dependencias del servidor
+│   └── tsconfig.json     # Configuración TypeScript del servidor
+├── config/               # Archivos de configuración
+│   ├── Dockerfile        # Configuración Docker
+│   ├── railway.json      # Configuración Railway
+│   └── .dockerignore     # Archivos ignorados por Docker
+├── docs/                 # Documentación
+│   ├── DEPLOYMENT.md     # Guía de despliegue
+│   └── RAILWAY_DEPLOY.md # Documentación específica de Railway
+├── scripts/              # Scripts de automatización
+│   ├── deploy-railway.ps1 # Script de deploy para Windows
+│   └── deploy-railway.sh  # Script de deploy para Unix
+├── dist/                 # Archivos construidos (generado)
+├── node_modules/         # Dependencias (generado)
+└── package.json          # Dependencias del frontend
 ```
 
 ## 🔧 Scripts disponibles
@@ -109,44 +125,53 @@ tic-tac-toe-ai/
 
 ## 🚀 Deploy
 
-### Frontend (Vercel)
-El frontend está configurado para deploy automático en Vercel.
+### Railway (Recomendado) 🚄
+Railway ofrece el despliegue más sencillo y rápido:
 
-### Backend (Fly.io) - Recomendado
-Para obtener la mejor latencia desde Argentina, usa Fly.io:
+#### Deploy Automático
+1. **Conectar repositorio** en [Railway](https://railway.com/)
+2. **Seleccionar el repositorio** de GitHub
+3. **Railway detectará automáticamente** la configuración
+4. **¡Listo!** Tu app estará desplegada en segundos
 
-#### Deploy Automático (Windows)
-```powershell
-# Ejecutar el script de deploy
-.\deploy-fly.ps1
+#### Deploy con CLI
+```bash
+# Instalar Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Inicializar proyecto
+railway init
+
+# Deploy
+railway up
 ```
 
-#### Deploy Manual
-1. **Instalar Fly CLI**:
-   ```powershell
-   iwr https://fly.io/install.ps1 -useb | iex
-   ```
+#### Deploy con Scripts Automáticos
+```bash
+# Windows
+.\scripts\deploy-railway.ps1
 
-2. **Login**:
-   ```bash
-   fly auth login
-   ```
+# Linux/Mac
+./scripts/deploy-railway.sh
+```
 
-3. **Deploy**:
-   ```bash
-   cd server
-   fly deploy
-   ```
+#### Ventajas de Railway
+- ✅ **Configuración automática** - No requiere archivos complejos
+- ✅ **Despliegue instantáneo** - Build optimizado
+- ✅ **Mejor UI** - Interfaz web intuitiva
+- ✅ **Monitoreo integrado** - Logs y métricas en tiempo real
+- ✅ **Escalado automático** - Se adapta a la demanda
+- ✅ **Dominio personalizado** - Fácil configuración
 
-#### Configuración
-- **URL**: https://tic-tac-toe-ai-server.fly.dev
-- **Región**: São Paulo (latencia ~30-50ms a Argentina)
-- **Plan**: Gratis (3 VMs + 160GB transferencia)
+### Alternativas
 
-### Backend (Render) - Alternativa
-Si prefieres mantener Render:
-- **URL**: https://tu-app.onrender.com
-- **Plan**: 750 horas/mes gratis
+#### Vercel (Solo Frontend)
+Para desplegar solo el frontend:
+- **URL**: https://tic-tac-toe-ai-ochre.vercel.app
+- **Configuración**: Automática desde GitHub
 
 ## 🤝 Contribuir
 

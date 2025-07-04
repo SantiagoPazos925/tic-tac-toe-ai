@@ -3,7 +3,6 @@ import { BoardState } from './types';
 import Board from './components/Board';
 import Lobby from './components/Lobby';
 import RoomStatus from './components/RoomStatus';
-import { LatencyIndicator } from './components/LatencyIndicator';
 import { ConnectionStats } from './components/ConnectionStats';
 import { useSocket } from './hooks/useSocket';
 
@@ -71,7 +70,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 flex flex-col items-center justify-center p-4 font-sans">
-      <LatencyIndicator latency={latency} isConnected={isConnected} />
       <ConnectionStats latency={latency} isConnected={isConnected} roomId={roomId} />
       <div className="text-center mb-8">
         <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">
@@ -112,7 +110,6 @@ function App() {
         <Board
           squares={gameState.board as BoardState}
           onSquareClick={handleSquareClick}
-          winningLine={gameState.winner ? null : null}
           isGameEnded={!!gameState.winner || gameState.isTie}
         />
         {isWaiting && (
