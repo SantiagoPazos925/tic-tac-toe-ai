@@ -137,7 +137,7 @@ const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom }) => {
                                     </div>
                                     <button
                                         onClick={() => handleJoinAvailableRoom(room.id)}
-                                        disabled={room.players >= 2 || room.gameStarted}
+                                        disabled={room.players >= 2}
                                         className="px-3 py-1 bg-teal-500 text-white rounded-lg font-bold hover:bg-teal-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Unirse
