@@ -22,7 +22,8 @@ function App() {
     makeMove,
     restartGame,
     isMyTurn,
-    canMakeMove
+    canMakeMove,
+    leaveRoom
   } = useSocket();
 
   const handleJoinRoom = (roomId: string) => {
@@ -53,6 +54,7 @@ function App() {
   };
 
   const handleBackToLobby = () => {
+    leaveRoom();
     setGameMode('lobby');
   };
 

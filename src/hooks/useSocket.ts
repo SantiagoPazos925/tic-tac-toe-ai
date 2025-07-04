@@ -175,6 +175,23 @@ export const useSocket = () => {
         );
     };
 
+    const leaveRoom = () => {
+        if (socketRef.current && roomId) {
+            socketRef.current.emit('leaveRoom', roomId);
+            setRoomId('');
+            setPlayerInfo(null);
+            setGameState({
+                board: Array(9).fill(null),
+                currentPlayer: '',
+                winner: null,
+                isTie: false,
+                gameStarted: false
+            });
+            setIsWaiting(false);
+            setError('');
+        }
+    };
+
     return {
         isConnected,
         gameState,
@@ -187,6 +204,7 @@ export const useSocket = () => {
         makeMove,
         restartGame,
         isMyTurn,
-        canMakeMove
+        canMakeMove,
+        leaveRoom
     };
 }; 

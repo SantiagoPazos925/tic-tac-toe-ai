@@ -189,6 +189,24 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Evento para salir de una sala
+    socket.on('leaveRoom', (roomId: string) => {
+        const room = gameRooms.get(roomId);
+        if (room) {
+            const playerIndex = room.players.indexOf(socket.id);
+            if (playerIndex !== -1) {
+                room.players.splice(playerIndex, 1);
+                if (room.players.length === 0) {
+                    gameRooms.delete(roomId);
+                    io.emit('roomsUpdated');
+                } else {
+                    io.to(roomId).emit('playerDisconnected');
+                    io.emit('roomsUpdated');
+                }
+            }
+        }
+    });
+
     // Desconexión
     socket.on('disconnect', () => {
         console.log('Usuario desconectado:', socket.id);
