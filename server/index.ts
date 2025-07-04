@@ -206,6 +206,8 @@ io.on('connection', (socket) => {
                 } else {
                     // Notificar al otro jugador
                     io.to(roomId).emit('playerDisconnected');
+                    // Notificar a todos los clientes que la lista de salas cambió
+                    io.emit('roomsUpdated');
                 }
                 break;
             }
