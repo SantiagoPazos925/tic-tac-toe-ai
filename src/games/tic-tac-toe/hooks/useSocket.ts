@@ -1,23 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-
-interface GameState {
-    board: string[];
-    currentPlayer: string;
-    winner: string | null;
-    isTie: boolean;
-    gameStarted: boolean;
-}
-
-interface PlayerInfo {
-    playerNumber: number;
-    symbol: string;
-    name?: string;
-    playerNames?: {
-        player1: string;
-        player2: string;
-    };
-}
+import { GameState, PlayerInfo } from '../../../shared/types';
 
 export const useSocket = () => {
     const socketRef = useRef<Socket | null>(null);

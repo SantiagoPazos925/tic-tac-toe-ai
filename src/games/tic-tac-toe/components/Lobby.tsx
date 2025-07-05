@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../hooks/useSocket';
+import { RoomInfo } from '../../../shared/types';
 
 interface LobbyProps {
     onJoinRoom: (roomId: string, playerName: string) => void;
     onCreateRoom: (playerName: string) => void;
     playerName: string;
+    onBackToMenu: () => void;
 }
 
-interface RoomInfo {
-    id: string;
-    players: number;
-    gameStarted: boolean;
-}
 
-const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom, playerName }) => {
+
+const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom, playerName, onBackToMenu }) => {
     const [roomId, setRoomId] = useState('');
     const [rooms, setRooms] = useState<RoomInfo[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
@@ -64,6 +62,16 @@ const Lobby: React.FC<LobbyProps> = ({ onJoinRoom, onCreateRoom, playerName }) =
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 flex flex-col items-center justify-center p-4 font-sans">
             <div className="text-center mb-8">
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={onBackToMenu}
+                        className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors duration-300 flex items-center space-x-2"
+                    >
+                        <span>←</span>
+                        <span>Menú de Juegos</span>
+                    </button>
+                    <div className="flex-1"></div>
+                </div>
                 <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">
                     Tic-Tac-Toe Online
                 </h1>

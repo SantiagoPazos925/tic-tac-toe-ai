@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import { BoardState } from './types';
-import Board from './components/Board';
-import Lobby from './components/Lobby';
-import PlayerNameInput from './components/PlayerNameInput';
-import RoomStatus from './components/RoomStatus';
-import { ConnectionStats } from './components/ConnectionStats';
-import { useSocket } from './hooks/useSocket';
+import { Board, Lobby, RoomStatus, useSocket, BoardState } from './games/tic-tac-toe';
+import { GameMenu, PlayerNameInput, ConnectionStats } from './shared';
 
-type GameMode = 'name-input' | 'lobby' | 'game';
+type GameMode = 'name-input' | 'game-menu' | 'lobby' | 'game';
 
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>('name-input');
@@ -30,7 +25,23 @@ function App() {
 
   const handleNameSubmit = (name: string) => {
     setPlayerName(name);
-    setGameMode('lobby');
+    setGameMode('game-menu');
+  };
+
+  const handleGameSelect = (gameId: string) => {
+    if (gameId === 'tic-tac-toe') {
+      setGameMode('lobby');
+    }
+    // Aquí se pueden agregar más juegos en el futuro
+  };
+
+  const handleBackToNameInput = () => {
+    setGameMode('name-input');
+  };
+
+  const handleBackToGameMenu = () => {
+    leaveRoom();
+    setGameMode('game-menu');
   };
 
   const handleJoinRoom = (roomId: string, playerName: string) => {
@@ -82,13 +93,33 @@ function App() {
     return <PlayerNameInput onSubmit={handleNameSubmit} onCancel={() => { }} />;
   }
 
+  if (gameMode === 'game-menu') {
+    return <GameMenu
+      playerName={playerName}
+      onSelectGame={handleGameSelect}
+      onBack={handleBackToNameInput}
+    />;
+  }
+
   if (gameMode === 'lobby') {
-    return <Lobby onJoinRoom={handleJoinRoom} onCreateRoom={handleCreateRoom} playerName={playerName} />;
+    return <Lobby onJoinRoom={handleJoinRoom} onCreateRoom={handleCreateRoom} playerName={playerName} onBackToMenu={handleBackToGameMenu} />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 flex flex-col items-center justify-center p-4 font-sans">
       <ConnectionStats latency={latency} isConnected={isConnected} roomId={roomId} />
+
+      {/* Botón para volver al menú de juegos */}
+      <div className="absolute top-16 left-4 z-40">
+        <button
+          onClick={handleBackToGameMenu}
+          className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors duration-300 flex items-center space-x-2"
+        >
+          <span>←</span>
+          <span>Menú de Juegos</span>
+        </button>
+      </div>
+
       <div className="text-center mb-8">
         <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">
           Tic-Tac-Toe Online
