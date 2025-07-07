@@ -65,10 +65,16 @@ export const calculateScore = (
 };
 
 // Función para obtener el siguiente dibujante
-export const getNextDrawer = (players: WordGuessingPlayer[], currentDrawerId: string): string => {
-    const currentIndex = players.findIndex(p => p.id === currentDrawerId);
-    const nextIndex = (currentIndex + 1) % players.length;
-    return players[nextIndex].id;
+export const getNextDrawer = (players: WordGuessingPlayer[], currentDrawerId: string, playerOrder?: string[]): string => {
+    if (playerOrder && playerOrder.length > 0) {
+        const currentIndex = playerOrder.findIndex(id => id === currentDrawerId);
+        const nextIndex = (currentIndex + 1) % playerOrder.length;
+        return playerOrder[nextIndex];
+    } else {
+        const currentIndex = players.findIndex(p => p.id === currentDrawerId);
+        const nextIndex = (currentIndex + 1) % players.length;
+        return players[nextIndex].id;
+    }
 };
 
 // Función para inicializar el estado del juego
@@ -102,11 +108,12 @@ export const initializeGameState = (players: WordGuessingPlayer[]): WordGuessing
 export const startNewRound = (
     players: WordGuessingPlayer[],
     roundNumber: number,
-    previousDrawerId?: string
+    previousDrawerId?: string,
+    playerOrder?: string[]
 ): Partial<WordGuessingGameState> => {
     const nextDrawerId = previousDrawerId
-        ? getNextDrawer(players, previousDrawerId)
-        : players[0]?.id || '';
+        ? getNextDrawer(players, previousDrawerId, playerOrder)
+        : (playerOrder && playerOrder[0]) || players[0]?.id || '';
 
     const word = getRandomWord();
     const revealedLetters = Array(word.length).fill(false);

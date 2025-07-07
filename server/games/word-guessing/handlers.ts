@@ -69,7 +69,8 @@ export function setupWordGuessingHandlers(io: Server, socket: Socket) {
                 drawingData: [],
                 messages: [],
                 timers: new Map(),
-                creatorName: playerName
+                creatorName: playerName,
+                playerOrder: [userId] // nuevo campo para el orden
             };
 
             wordGuessingRooms.set(roomId, room);
@@ -100,6 +101,7 @@ export function setupWordGuessingHandlers(io: Server, socket: Socket) {
 
                 room.players.push(newPlayer);
                 room.gameState.players = room.players;
+                room.playerOrder.push(userId); // mantener el orden
 
                 // Notificar al jugador que se unió
                 socket.emit('word-guessing-player-joined', newPlayer);
@@ -264,6 +266,10 @@ export function setupWordGuessingHandlers(io: Server, socket: Socket) {
                 const playerName = room.players[playerIndex].name;
                 room.players.splice(playerIndex, 1);
                 room.gameState.players = room.players;
+                // Eliminar del orden
+                if (room.playerOrder) {
+                    room.playerOrder = room.playerOrder.filter(id => id !== userId);
+                }
 
                 // Mensaje de sistema al chat
                 const systemMessage = {
@@ -343,6 +349,10 @@ export function setupWordGuessingHandlers(io: Server, socket: Socket) {
                 const playerName = room.players[playerIndex].name;
                 room.players.splice(playerIndex, 1);
                 room.gameState.players = room.players;
+                // Eliminar del orden
+                if (room.playerOrder) {
+                    room.playerOrder = room.playerOrder.filter(id => id !== userId);
+                }
 
                 // Mensaje de sistema al chat
                 const systemMessage = {
@@ -497,15 +507,16 @@ function endWordGuessingRound(roomId: string, room: WordGuessingRoom, io: Server
     } else {
         // Iniciar siguiente ronda después de 5 segundos
         setTimeout(() => {
-            // Corregir: si el dibujante actual ya no está, usar el primero de la lista
+            // Usar playerOrder para la rotación de turnos
             let nextDrawerId = room.gameState.currentDrawer;
-            if (!room.players.some(p => p.id === nextDrawerId)) {
-                nextDrawerId = room.players[0]?.id || '';
+            if (!room.playerOrder.includes(nextDrawerId)) {
+                nextDrawerId = room.playerOrder[0] || '';
             }
             const nextRoundData = startNewRound(
-                room.gameState.players,
+                room.players,
                 room.gameState.roundNumber + 1,
-                nextDrawerId
+                nextDrawerId,
+                room.playerOrder
             );
             Object.assign(room.gameState, nextRoundData);
 
