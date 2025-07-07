@@ -5,7 +5,7 @@ import {
     WordGuessingRoom,
     WordGuessingPlayer,
     WordGuessingMove,
-    WordGuessingMessage,
+    WordGuessingGameState,
     WordGuessingStart,
     WordGuessingJoin
 } from './types.js';

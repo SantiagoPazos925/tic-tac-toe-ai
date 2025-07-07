@@ -31,7 +31,7 @@ export interface WordGuessingRoom {
     players: WordGuessingPlayer[];
     gameState: WordGuessingGameState;
     drawingData: DrawingPoint[];
-    messages: WordGuessingMessage[];
+    messages: ChatMessage[];
     timers: Map<string, NodeJS.Timeout>;
     creatorName?: string;
     playerOrder: string[]; // nuevo campo para el orden de turnos
@@ -40,11 +40,6 @@ export interface WordGuessingRoom {
 export interface WordGuessingMove {
     roomId: string;
     drawingPoint: DrawingPoint;
-}
-
-export interface WordGuessingMessage {
-    roomId: string;
-    message: string;
 }
 
 export interface WordGuessingStart {
