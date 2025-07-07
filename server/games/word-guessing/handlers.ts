@@ -497,10 +497,15 @@ function endWordGuessingRound(roomId: string, room: WordGuessingRoom, io: Server
     } else {
         // Iniciar siguiente ronda después de 5 segundos
         setTimeout(() => {
+            // Corregir: si el dibujante actual ya no está, usar el primero de la lista
+            let nextDrawerId = room.gameState.currentDrawer;
+            if (!room.players.some(p => p.id === nextDrawerId)) {
+                nextDrawerId = room.players[0]?.id || '';
+            }
             const nextRoundData = startNewRound(
                 room.gameState.players,
                 room.gameState.roundNumber + 1,
-                room.gameState.currentDrawer
+                nextDrawerId
             );
             Object.assign(room.gameState, nextRoundData);
 

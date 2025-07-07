@@ -23,22 +23,8 @@ export function checkGuess(guess: string, correctWord: string): boolean {
     const normalizedGuess = guess.trim().toLowerCase();
     const normalizedCorrect = correctWord.trim().toLowerCase();
 
-    // Verificar coincidencia exacta
-    if (normalizedGuess === normalizedCorrect) {
-        return true;
-    }
-
-    // Verificar si la respuesta contiene la palabra correcta (para casos donde el usuario escribe más texto)
-    if (normalizedGuess.includes(normalizedCorrect)) {
-        return true;
-    }
-
-    // Verificar si la palabra correcta contiene la respuesta (para casos de abreviaciones)
-    if (normalizedCorrect.includes(normalizedGuess) && normalizedGuess.length >= 3) {
-        return true;
-    }
-
-    return false;
+    // Solo coincidencia exacta
+    return normalizedGuess === normalizedCorrect;
 }
 
 // Función para calcular puntuación
