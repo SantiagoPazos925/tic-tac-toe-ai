@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Board, Lobby, RoomStatus, useSocket, BoardState } from './games/tic-tac-toe';
-import { GameMenu, PlayerNameInput, ConnectionStats } from './shared';
 
-type GameMode = 'name-input' | 'game-menu' | 'lobby' | 'game';
+import { UnoGame } from './games/uno';
+import { WordGuessingGame } from './games/word-guessing';
+import { GameMenu, PlayerNameInput, ConnectionStats } from './shared';
+import WordGuessingLobby from './games/word-guessing/components/WordGuessingLobby';
+
+type GameMode = 'name-input' | 'game-menu' | 'lobby' | 'game' | 'uno-game' | 'word-guessing-lobby' | 'word-guessing-game';
 
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>('name-input');
@@ -22,6 +26,7 @@ function App() {
     canMakeMove,
     leaveRoom
   } = useSocket();
+  const [wordGuessingRoomId, setWordGuessingRoomId] = useState<string | null>(null);
 
   const handleNameSubmit = (name: string) => {
     setPlayerName(name);
@@ -31,6 +36,10 @@ function App() {
   const handleGameSelect = (gameId: string) => {
     if (gameId === 'tic-tac-toe') {
       setGameMode('lobby');
+    } else if (gameId === 'uno') {
+      setGameMode('uno-game');
+    } else if (gameId === 'word-guessing') {
+      setGameMode('word-guessing-lobby');
     }
     // Aquí se pueden agregar más juegos en el futuro
   };
@@ -89,6 +98,23 @@ function App() {
     return "Turno del oponente";
   };
 
+  // --- Word Guessing Lobby Handlers ---
+  const handleWordGuessingCreateRoom = () => {
+    const randomRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setWordGuessingRoomId(randomRoomId);
+    setGameMode('word-guessing-game');
+  };
+
+  const handleWordGuessingJoinRoom = (roomId: string) => {
+    setWordGuessingRoomId(roomId);
+    setGameMode('word-guessing-game');
+  };
+
+  const handleBackToWordGuessingLobby = () => {
+    setGameMode('word-guessing-lobby');
+    setWordGuessingRoomId(null);
+  };
+
   if (gameMode === 'name-input') {
     return <PlayerNameInput onSubmit={handleNameSubmit} onCancel={() => { }} />;
   }
@@ -103,6 +129,33 @@ function App() {
 
   if (gameMode === 'lobby') {
     return <Lobby onJoinRoom={handleJoinRoom} onCreateRoom={handleCreateRoom} playerName={playerName} onBackToMenu={handleBackToGameMenu} />;
+  }
+
+
+
+  if (gameMode === 'uno-game') {
+    return <UnoGame onBackToMenu={handleBackToGameMenu} />;
+  }
+
+  if (gameMode === 'word-guessing-lobby') {
+    return (
+      <WordGuessingLobby
+        onJoinRoom={handleWordGuessingJoinRoom}
+        onCreateRoom={handleWordGuessingCreateRoom}
+        playerName={playerName}
+        onBackToMenu={handleBackToGameMenu}
+      />
+    );
+  }
+
+  if (gameMode === 'word-guessing-game' && wordGuessingRoomId) {
+    return (
+      <WordGuessingGame
+        roomId={wordGuessingRoomId}
+        playerName={playerName}
+        onBackToLobby={handleBackToWordGuessingLobby}
+      />
+    );
   }
 
   return (

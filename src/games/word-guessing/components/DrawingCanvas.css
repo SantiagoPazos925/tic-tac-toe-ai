@@ -1,0 +1,331 @@
+/* Fondo oscuro con patrón tipo comic/cartoon */
+.drawing-canvas-bg {
+    min-height: 100vh;
+    background: #23232b;
+    background-image: url('https://www.transparenttextures.com/patterns/cartographer.png');
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    overflow: hidden;
+}
+
+.drawing-canvas-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30, 30, 40, 0.95);
+    background-image: url('https://www.transparenttextures.com/patterns/cartographer.png');
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    gap: 0;
+    position: relative;
+}
+
+/* Barra de herramientas vertical */
+.toolbar-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: rgba(20, 20, 25, 0.85);
+    border-radius: 16px;
+    padding: 16px 8px;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.25);
+    margin: 0 16px 0 32px;
+    height: 90vh;
+}
+
+.toolbar-vertical button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.2s;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+.toolbar-vertical button.active,
+.toolbar-vertical button:hover {
+    background: #3a3a4d;
+    opacity: 1;
+}
+
+/* Canvas centrado y expandido */
+.canvas-center-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    padding: 0;
+    position: relative;
+    flex: 1 1 auto;
+    height: 90vh;
+    min-width: 320px;
+    min-height: 200px;
+    max-width: calc(100vw - 420px);
+    /* 320px chat + 100px paleta y margen */
+    max-height: 95vh;
+}
+
+.drawing-canvas {
+    width: 80%;
+    height: 100%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.10);
+    display: block;
+}
+
+.chat-box {
+    width: 20%;
+    background: #23232b;
+    background-image: url('https://www.transparenttextures.com/patterns/cartographer.png');
+}
+
+/* Sliders inferiores */
+.canvas-sliders {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    margin-top: 8px;
+    justify-content: center;
+}
+
+.slider-group {
+    align-items: center;
+    background: var(--black);
+    border-radius: 9px;
+    color: var(--light-gray);
+    display: flex;
+    gap: 12px;
+    height: 60px;
+    justify-content: space-between;
+    max-width: 450px;
+    padding: 12px;
+    position: relative;
+    transition: all .1s ease;
+    width: 100%;
+}
+
+.slider-group label {
+    margin-right: 6px;
+}
+
+.slider-group input[type="range"] {
+    accent-color: #8a2be2;
+}
+
+/* Paleta de colores derecha */
+.palette-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-left: 16px;
+    margin-right: 16px;
+    height: 90vh;
+    justify-content: center;
+}
+
+.palette-colors {
+    display: grid;
+    grid-template-columns: repeat(4, 28px);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.palette-color-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1.5px solid #444;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+.palette-color-btn:focus,
+.palette-color-btn:hover {
+    border: 2.5px solid #fff;
+    box-shadow: 0 0 0 2px #8a2be2;
+}
+
+.palette-selected-color {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 2.5px solid #fff;
+    box-shadow: 0 0 0 2px #8a2be2;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.color-picker-popover {
+    position: absolute;
+    z-index: 10;
+    top: 60px;
+    right: 0;
+}
+
+@media (max-width: 1200px) {
+    .canvas-center-area {
+        max-width: calc(100vw - 220px);
+    }
+}
+
+@media (max-width: 900px) {
+    .drawing-canvas {
+        width: 95vw;
+        height: 40vw;
+        min-height: 200px;
+        min-width: 200px;
+    }
+
+    .drawing-canvas-container {
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+    }
+
+    .palette-right {
+        flex-direction: row;
+        margin-left: 0;
+        margin-top: 12px;
+        height: auto;
+    }
+
+    .canvas-center-area {
+        width: 95vw;
+        height: 40vw;
+        min-width: 200px;
+        min-height: 200px;
+        max-width: 100vw;
+    }
+}
+
+.canvas-layout-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+.canvas-area-flex {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1 1 auto;
+    height: 90vh;
+    justify-content: center;
+}
+
+.canvas-header {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(30, 30, 40, 0.95);
+    color: #fff;
+    border-radius: 12px 12px 0 0;
+    padding: 16px 32px 12px 32px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    min-height: 56px;
+}
+
+.canvas-header-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 1px;
+}
+
+.canvas-header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.canvas-header-word {
+    font-family: 'Fira Mono', 'Consolas', monospace;
+    font-size: 1.5rem;
+    color: #ffe066;
+    background: #23232b;
+    border-radius: 8px;
+    padding: 6px 18px;
+    letter-spacing: 0.2em;
+    box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.10);
+}
+
+.canvas-header-timer {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ff7675;
+    background: #23232b;
+    border-radius: 8px;
+    padding: 6px 16px;
+    margin-left: 12px;
+    box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.10);
+}
+
+.canvas-relative {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.canvas-scaled {
+    /* El escalado se aplicará por JS usando data-zoom */
+}
+
+.cursor-crosshair {
+    cursor: crosshair !important;
+}
+
+.cursor-default {
+    cursor: default !important;
+}
+
+.eraser-outline {
+    position: absolute;
+    border: 2px solid #ff7675;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.palette-color-btn-dynamic {
+    /* El color de fondo se aplica por data-color en JS */
+}
+
+.palette-color-btn-active {
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 2px #8a2be2;
+}
+
+.palette-selected-color-dynamic {
+    /* El color de fondo se aplica por data-color en JS */
+}
+
+.palette-color-btn-dynamic[data-color] {
+    background-color: attr(data-color);
+}
+
+.palette-selected-color-dynamic[data-color] {
+    background-color: attr(data-color);
+}
+
+/* Fallback para navegadores que no soportan attr() en background-color (usualmente se usa JS, pero aquí lo dejamos como referencia) */
+/* Si no funciona, se puede usar un pequeño efecto JS para aplicar el color dinámicamente */

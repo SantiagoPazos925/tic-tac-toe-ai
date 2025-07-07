@@ -3,6 +3,15 @@ import { Game } from '../types';
 // Configuración centralizada de todos los juegos
 export const GAMES: Game[] = [
     {
+        id: 'uno',
+        name: 'UNO',
+        description: 'El clásico juego de cartas UNO',
+        icon: '🃏',
+        status: 'coming-soon',
+        players: '1 vs IA'
+    },
+
+    {
         id: 'tic-tac-toe',
         name: 'Tic-Tac-Toe',
         description: 'El clásico juego de tres en línea',
@@ -11,45 +20,14 @@ export const GAMES: Game[] = [
         players: '2 jugadores'
     },
     {
-        id: 'connect-four',
-        name: 'Conecta 4',
-        description: 'Conecta cuatro fichas en línea',
-        icon: '🔴',
-        status: 'coming-soon',
-        players: '2 jugadores'
-    },
-    {
-        id: 'checkers',
-        name: 'Damas',
-        description: 'El juego tradicional de damas',
-        icon: '⚫',
-        status: 'coming-soon',
-        players: '2 jugadores'
-    },
-    {
-        id: 'chess',
-        name: 'Ajedrez',
-        description: 'El juego de estrategia por excelencia',
-        icon: '♔',
-        status: 'coming-soon',
-        players: '2 jugadores'
-    },
-    {
-        id: 'battleship',
-        name: 'Batalla Naval',
-        description: 'Hunde la flota enemiga',
-        icon: '🚢',
-        status: 'coming-soon',
-        players: '2 jugadores'
-    },
-    {
-        id: 'wordle',
-        name: 'Wordle',
-        description: 'Adivina la palabra en 6 intentos',
-        icon: '📝',
-        status: 'coming-soon',
-        players: '1 jugador'
+        id: 'word-guessing',
+        name: 'Adivina la Palabra',
+        description: 'Dibuja y adivina palabras en tiempo real',
+        icon: '🎨',
+        status: 'available',
+        players: '2-8 jugadores'
     }
+
 ];
 
 // Función para obtener un juego por ID

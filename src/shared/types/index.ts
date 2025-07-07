@@ -31,4 +31,5 @@ export interface RoomInfo {
     id: string;
     players: number;
     gameStarted: boolean;
+    creatorName?: string;
 } 

@@ -1,0 +1,116 @@
+/* Estilos personalizados para el lobby de Adivina la Palabra (modo oscuro, detalles violeta) */
+
+.lobbyBackground {
+    background: #23232b;
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.lobbyPanel {
+    background: #29293a;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    padding: 40px 28px;
+    color: #fff;
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.lobbyTitle {
+    color: #ffe066;
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.lobbySubtitle {
+    color: #bdbdbd;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.lobbyBtn {
+    background: linear-gradient(90deg, #7f53ff 0%, #647dee 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    padding: 12px 0;
+    margin-top: 12px;
+    box-shadow: 0 2px 8px rgba(100, 125, 222, 0.2);
+    transition: background 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+
+.lobbyBtn:hover {
+    background: linear-gradient(90deg, #a685fa 0%, #7f53ff 100%);
+    transform: scale(1.04);
+}
+
+.lobbyInput {
+    background: #23232b;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.lobbyRoomList {
+    background: #23232b;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 16px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(100, 125, 222, 0.1);
+}
+
+.lobbyRoomItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    background: #29293a;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.lobbyRoomCode {
+    color: #ffe066;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.lobbyRoomJoinBtn {
+    background: #7f53ff;
+    color: #fff;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.lobbyRoomJoinBtn:hover {
+    background: #a685fa;
+}
+
+.lobbyDivider {
+    border-top: 1px solid #444;
+    margin: 24px 0 16px 0;
+}
+
+.lobbyInfoText {
+    color: #bdbdbd;
+    font-size: 0.95rem;
+    text-align: center;
+    margin-top: 18px;
+}
