@@ -9,7 +9,7 @@ function App() {
     setLoading(true)
     try {
       // Cambia esta URL por tu backend de Railway cuando lo despliegues
-      const response = await fetch('http://localhost:3001/api/hello')
+      const response = await fetch('https://tic-tac-toe-ai-production-13d0.up.railway.app')
       const data = await response.json()
       setMessage(data.message)
     } catch (error) {
