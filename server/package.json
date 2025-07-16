@@ -1,28 +1,24 @@
 {
-    "name": "tic-tac-toe-server",
+    "name": "template-backend",
     "version": "1.0.0",
-    "description": "Servidor para el juego Tic-Tac-Toe multijugador",
-    "main": "index.js",
+    "description": "Template backend para Railway",
+    "main": "dist/index.js",
     "type": "module",
     "scripts": {
         "start": "node dist/index.js",
         "dev": "tsx index.ts",
         "build": "tsc",
-        "watch": "tsx watch index.ts",
-        "postinstall": "npm run build",
-        "test:word-guessing": "node test-word-guessing.js"
+        "watch": "tsx watch index.ts"
     },
     "dependencies": {
         "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "socket.io": "^4.7.2",
-        "typescript": "^5.0.0",
-        "ts-node": "^10.9.1"
+        "express": "^4.18.2"
     },
     "devDependencies": {
         "@types/cors": "^2.8.13",
         "@types/express": "^4.17.17",
+        "@types/node": "^22.14.0",
         "tsx": "^4.20.3",
-        "socket.io-client": "^4.7.2"
+        "typescript": "^5.0.0"
     }
 }

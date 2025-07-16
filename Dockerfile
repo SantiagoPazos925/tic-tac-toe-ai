@@ -1,5 +1,5 @@
-# Dockerfile para Railway - Tic Tac Toe AI
-FROM node:20-alpine AS base
+# Dockerfile para Railway - Template Backend
+FROM node:20-alpine
 
 # Instalar dependencias necesarias
 RUN apk add --no-cache libc6-compat
@@ -7,47 +7,18 @@ RUN apk add --no-cache libc6-compat
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de configuración
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY vite.config.ts ./
-
-# Instalar dependencias del frontend
-RUN npm ci --omit=dev
-
-# Copiar código fuente del frontend
-COPY . .
-
-# Construir el frontend
-RUN npm run build
-
-# Etapa del servidor
-FROM node:20-alpine AS server
-
-WORKDIR /app
-
-# Copiar package.json del servidor
+# Copiar archivos de configuración del servidor
 COPY server/package*.json ./
+COPY server/tsconfig.json ./
 
 # Instalar dependencias del servidor
 RUN npm ci --omit=dev
 
-# Copiar código del servidor y la carpeta dist generada localmente
-COPY server/dist ./dist
-COPY server/package.json ./
+# Copiar código fuente del servidor
+COPY server/ ./
 
-# Etapa final
-FROM node:20-alpine AS production
-
-WORKDIR /app
-
-# Copiar package.json del servidor como package.json principal
-COPY server/package*.json ./
-RUN npm ci --omit=dev
-
-# Copiar archivos construidos
-COPY --from=server /app/dist ./dist
-COPY --from=base /app/dist ./public
+# Construir el servidor
+RUN npm run build
 
 # Exponer puerto
 EXPOSE 3001
