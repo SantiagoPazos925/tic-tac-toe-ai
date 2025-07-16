@@ -34,11 +34,25 @@ function App() {
 
   // Conectar al servidor
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001');
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const newSocket = io(baseUrl);
+
+    // Verificar si hay sesión guardada al conectar
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      setAuthUser(JSON.parse(user));
+      setShowAuth(false);
+    }
 
     newSocket.on('connect', () => {
       setIsConnected(true);
       setMessage('Conectado al servidor');
+
+      // Si el usuario ya está autenticado, unirse al lobby
+      if (authUser) {
+        newSocket.emit('join-lobby', { name: authUser.username });
+      }
     });
 
     newSocket.on('disconnect', () => {
@@ -75,12 +89,15 @@ function App() {
     e.preventDefault();
 
     try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const url = `${baseUrl}${endpoint}`;
+
       const body = isLogin
         ? { username: authForm.username, password: authForm.password }
         : authForm;
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,6 +113,11 @@ function App() {
         setMessage(data.message);
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Unirse al lobby después de autenticarse
+        if (socket) {
+          socket.emit('join-lobby', { name: data.user.username });
+        }
       } else {
         setMessage(data.error);
       }
@@ -151,10 +173,16 @@ function App() {
     const user = localStorage.getItem('user');
 
     if (token && user) {
-      setAuthUser(JSON.parse(user));
+      const parsedUser = JSON.parse(user);
+      setAuthUser(parsedUser);
       setShowAuth(false);
+
+      // Unirse al lobby si ya está conectado al socket
+      if (socket && socket.connected) {
+        socket.emit('join-lobby', { name: parsedUser.username });
+      }
     }
-  }, []);
+  }, [socket]);
 
   if (showAuth) {
     return (
