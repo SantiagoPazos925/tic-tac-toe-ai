@@ -20,7 +20,6 @@ function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [showAuth, setShowAuth] = useState(true);
   const [isLogin, setIsLogin] = useState(true);
@@ -105,14 +104,6 @@ function App() {
     } catch (error) {
       setMessage('Error de conexión');
       console.error('Error:', error);
-    }
-  };
-
-  const handleJoinLobby = () => {
-    if (userName.trim() && socket) {
-      socket.emit('join-lobby', { name: userName.trim() });
-      setShowAuth(false);
-      setMessage('Te has unido al lobby');
     }
   };
 
