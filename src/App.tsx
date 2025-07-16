@@ -92,7 +92,6 @@ function App() {
 
       if (response.ok) {
         setAuthUser(data.user);
-        setUserName(data.user.username);
         setShowAuth(false);
         setMessage(data.message);
         localStorage.setItem('token', data.token);
@@ -153,7 +152,6 @@ function App() {
 
     if (token && user) {
       setAuthUser(JSON.parse(user));
-      setUserName(JSON.parse(user).username);
       setShowAuth(false);
     }
   }, []);
