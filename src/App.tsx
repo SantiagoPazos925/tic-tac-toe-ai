@@ -23,7 +23,6 @@ function App() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [showAuth, setShowAuth] = useState(true);
   const [isLogin, setIsLogin] = useState(true);
-  const [userName, setUserName] = useState('');
   const [message, setMessage] = useState('');
 
   // Formulario de autenticación
