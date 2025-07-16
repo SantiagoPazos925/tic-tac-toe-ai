@@ -1,12 +1,20 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { createUser, findUserByUsername, findUserByEmail, verifyPassword, updateUserStatus } from './database.js';
+
+// Extender el tipo Request para incluir user
+interface AuthenticatedRequest extends Request {
+    user?: {
+        id: number;
+        username: string;
+    };
+}
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'tu-secreto-super-seguro';
 
 // Middleware para verificar token
-export function authenticateToken(req: any, res: any, next: any) {
+export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -24,7 +32,7 @@ export function authenticateToken(req: any, res: any, next: any) {
 }
 
 // Registro de usuario
-router.post('/register', async (req, res) => {
+router.post('/register', async (req: Request, res: Response) => {
     try {
         const { username, email, password } = req.body;
 
@@ -79,7 +87,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Inicio de sesión
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
     try {
         const { username, password } = req.body;
 
@@ -127,8 +135,12 @@ router.post('/login', async (req, res) => {
 });
 
 // Obtener perfil del usuario
-router.get('/profile', authenticateToken, async (req, res) => {
+router.get('/profile', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Usuario no autenticado' });
+        }
+
         const user = await findUserByUsername(req.user.username);
         if (!user) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
