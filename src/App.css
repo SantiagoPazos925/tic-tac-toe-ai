@@ -6,44 +6,136 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.App-header {
+.lobby-container,
+.auth-container {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    padding: 40px;
+    padding: 30px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
+    max-width: 800px;
     width: 100%;
+    backdrop-filter: blur(10px);
 }
 
-.App-header h1 {
+.auth-container {
+    max-width: 500px;
+}
+
+.lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.lobby-header h1 {
     color: #333;
-    margin-bottom: 10px;
+    margin: 0;
     font-size: 2.5rem;
     font-weight: bold;
 }
 
-.App-header p {
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
     color: #666;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.connected {
+    background-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.status-dot.disconnected {
+    background-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.current-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #333;
+    font-weight: 500;
+}
+
+.logout-button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.auth-form-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.auth-form-container h2 {
+    color: #333;
     margin-bottom: 30px;
+    font-size: 1.8rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
     font-size: 1.1rem;
+    transition: all 0.3s ease;
+    outline: none;
 }
 
-.card {
-    background: #f8f9fa;
-    border-radius: 15px;
-    padding: 30px;
-    margin-bottom: 30px;
-    border: 1px solid #e9ecef;
+.auth-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.card button {
+.auth-button {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     padding: 15px 30px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
@@ -51,68 +143,248 @@
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-.card button:hover:not(:disabled) {
+.auth-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.card button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.auth-switch {
+    margin-top: 30px;
+    color: #666;
 }
 
-.message {
-    margin-top: 20px;
+.switch-button {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 8px;
+}
+
+.switch-button:hover {
+    color: #764ba2;
+}
+
+.message-banner {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+}
+
+.message-banner.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lobby-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    align-items: start;
+}
+
+.users-section h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    text-align: left;
+}
+
+.users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.users-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.users-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.users-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.users-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.no-users {
+    color: #666;
+    font-style: italic;
+    padding: 40px 20px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 2px dashed #d1d5db;
+}
+
+.user-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     padding: 15px;
-    background: #d4edda;
-    color: #155724;
-    border-radius: 8px;
-    border: 1px solid #c3e6cb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.user-details h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.user-status {
+    font-size: 0.9rem;
     font-weight: 500;
 }
 
-.instructions {
-    text-align: left;
+.user-time {
+    color: #666;
+    font-size: 0.85rem;
+    text-align: right;
+}
+
+.controls-section {
     background: #f8f9fa;
     border-radius: 15px;
     padding: 25px;
     border: 1px solid #e9ecef;
 }
 
-.instructions h3 {
+.controls-section h3 {
     color: #333;
-    margin-bottom: 15px;
-    font-size: 1.3rem;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
 }
 
-.instructions ol {
-    color: #555;
-    line-height: 1.6;
+.status-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.instructions li {
-    margin-bottom: 10px;
+.status-button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
 }
 
-.instructions code {
-    background: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+.status-button.online {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.status-button.away {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.status-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 768px) {
-    .App-header {
-        padding: 30px 20px;
+
+    .lobby-container,
+    .auth-container {
+        padding: 20px;
+        margin: 10px;
     }
 
-    .App-header h1 {
+    .lobby-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .lobby-header h1 {
         font-size: 2rem;
     }
 
-    .card,
-    .instructions {
-        padding: 20px;
+    .user-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .lobby-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .users-list {
+        max-height: 300px;
+    }
+
+    .user-card {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .user-time {
+        text-align: center;
+    }
+
+    .auth-form {
+        max-width: 100%;
     }
 }
