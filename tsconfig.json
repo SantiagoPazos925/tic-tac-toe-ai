@@ -42,17 +42,10 @@
     }
   },
   "include": [
-    "src/**/*",
-    "server/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "server/dist"
-  ],
-  "references": [
-    {
-      "path": "./server"
-    }
+    "dist"
   ]
 }
