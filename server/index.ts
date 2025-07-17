@@ -44,6 +44,7 @@ interface LobbyUser {
     name: string;
     status: 'online' | 'away' | 'offline';
     joinedAt: Date;
+    lastSeen?: Date;
 }
 
 // Almacenar mensajes del chat
@@ -56,6 +57,7 @@ interface ChatMessage {
 }
 
 const connectedUsers = new Map<string, LobbyUser>();
+const userSessions = new Map<string, { name: string; lastSeen: Date }>(); // Para manejar reconexiones
 const chatMessages: ChatMessage[] = [];
 
 // Health check para Railway
@@ -102,29 +104,36 @@ io.on('connection', (socket) => {
 
     // Unirse al lobby
     socket.on('join-lobby', (userData: { name: string }) => {
+        const now = new Date();
+        const existingUser = userSessions.get(userData.name);
+        const isReconnection = existingUser &&
+            (now.getTime() - existingUser.lastSeen.getTime()) < 10000; // 10 segundos
+
         const user: LobbyUser = {
             id: socket.id,
             name: userData.name,
             status: 'online',
-            joinedAt: new Date()
+            joinedAt: now,
+            lastSeen: now
         };
 
         connectedUsers.set(socket.id, user);
+        userSessions.set(userData.name, { name: userData.name, lastSeen: now });
 
-        // Crear mensaje del sistema
-        const systemMessage: ChatMessage = {
-            id: Date.now().toString(),
-            type: 'system',
-            content: `${userData.name} se unió al lobby`,
-            timestamp: new Date()
-        };
-        chatMessages.push(systemMessage);
+        // Solo crear mensaje del sistema si no es una reconexión rápida
+        if (!isReconnection) {
+            const systemMessage: ChatMessage = {
+                id: Date.now().toString(),
+                type: 'system',
+                content: `${userData.name} se unió al lobby`,
+                timestamp: now
+            };
+            chatMessages.push(systemMessage);
+            io.emit('chat-message', systemMessage);
+        }
 
         // Notificar a todos los usuarios sobre el nuevo usuario
         io.emit('user-joined', user);
-
-        // Enviar mensaje del sistema a todos
-        io.emit('chat-message', systemMessage);
 
         // Enviar lista actual de usuarios al nuevo usuario
         socket.emit('users-list', Array.from(connectedUsers.values()));
@@ -132,7 +141,7 @@ io.on('connection', (socket) => {
         // Enviar historial del chat al nuevo usuario
         socket.emit('chat-history', chatMessages);
 
-        console.log(`Usuario ${userData.name} se unió al lobby`);
+        console.log(`Usuario ${userData.name} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby`);
     });
 
     // Enviar mensaje del chat
@@ -171,6 +180,7 @@ io.on('connection', (socket) => {
         const user = connectedUsers.get(socket.id);
         if (user) {
             connectedUsers.delete(socket.id);
+            userSessions.delete(user.name); // Limpiar sesión al salir manualmente
 
             // Crear mensaje del sistema
             const systemMessage: ChatMessage = {
@@ -184,7 +194,7 @@ io.on('connection', (socket) => {
             io.emit('user-left', { id: socket.id, name: user.name });
             io.emit('chat-message', systemMessage);
 
-            console.log(`Usuario ${user.name} cerró sesión`);
+            console.log(`Usuario ${user.name} cerró sesión manualmente`);
         }
     });
 
@@ -197,21 +207,30 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         const user = connectedUsers.get(socket.id);
         if (user) {
+            const now = new Date();
+            userSessions.set(user.name, { name: user.name, lastSeen: now });
             connectedUsers.delete(socket.id);
 
-            // Crear mensaje del sistema
-            const systemMessage: ChatMessage = {
-                id: Date.now().toString(),
-                type: 'system',
-                content: `${user.name} se desconectó`,
-                timestamp: new Date()
-            };
-            chatMessages.push(systemMessage);
+            // Solo crear mensaje del sistema si el usuario no se reconecta rápidamente
+            setTimeout(() => {
+                const currentSession = userSessions.get(user.name);
+                if (currentSession &&
+                    (now.getTime() - currentSession.lastSeen.getTime()) > 10000) { // 10 segundos
+
+                    const systemMessage: ChatMessage = {
+                        id: Date.now().toString(),
+                        type: 'system',
+                        content: `${user.name} se desconectó`,
+                        timestamp: now
+                    };
+                    chatMessages.push(systemMessage);
+                    io.emit('chat-message', systemMessage);
+                    console.log(`Usuario ${user.name} se desconectó definitivamente`);
+                }
+            }, 10000); // Esperar 10 segundos antes de confirmar la desconexión
 
             io.emit('user-left', { id: socket.id, name: user.name });
-            io.emit('chat-message', systemMessage);
-
-            console.log(`Usuario ${user.name} se desconectó`);
+            console.log(`Usuario ${user.name} se desconectó temporalmente`);
         }
     });
 });

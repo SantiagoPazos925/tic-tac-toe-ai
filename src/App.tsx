@@ -19,6 +19,7 @@ function App() {
   const [contextMenuUser, setContextMenuUser] = useState<User | null>(null);
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition>({ x: 0, y: 0 });
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const systemMessagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Unirse al lobby cuando el usuario se autentica y el socket está conectado
   useEffect(() => {
@@ -31,7 +32,21 @@ function App() {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatMessages]);
+  }, [chatMessages.filter(message => message.type === 'user').length]);
+
+  // Scroll automático para mensajes del sistema
+  useEffect(() => {
+    const systemMessages = chatMessages.filter(message => message.type === 'system');
+    if (systemMessagesEndRef.current && systemMessages.length > 0) {
+      // Pequeño delay para asegurar que el DOM se haya actualizado
+      setTimeout(() => {
+        systemMessagesEndRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }, 100);
+    }
+  }, [chatMessages.filter(message => message.type === 'system').length]);
 
   // Cerrar menús al hacer clic fuera
   useEffect(() => {
@@ -213,30 +228,59 @@ function App() {
               <h2>💬 Chat del Lobby</h2>
             </div>
 
-            <div className="chat-messages">             {chatMessages.length === 0 ? (
-              <motion.p
-                className="no-messages"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                No hay mensajes aún. ¡Sé el primero en escribir!
-              </motion.p>
-            ) : (
-              chatMessages.map(message => (
-                <motion.div
-                  key={message.id}
-                  className={`chat-message ${message.type === 'system' ? 'system-message' : ''}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+            {/* Sección de mensajes del sistema */}
+            <div className="system-messages-section">
+              {chatMessages.filter(message => message.type === 'system').length > 0 && (
+                <div className="system-messages">
+                  <h4 className="system-messages-title">📢 Información del Sistema</h4>
+                  {chatMessages
+                    .filter(message => message.type === 'system')
+                    .map(message => (
+                      <motion.div
+                        key={message.id}
+                        className="system-message"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <span className="system-icon">ℹ️</span>
+                        <span className="system-content">{message.content}</span>
+                        <span className="system-timestamp">{formatTime(message.timestamp)}</span>
+                      </motion.div>
+                    ))}
+                  <div ref={systemMessagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Sección de mensajes del chat */}
+            <div className="chat-messages">
+              {chatMessages.filter(message => message.type === 'user').length === 0 ? (
+                <motion.p
+                  className="no-messages"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  {message.sender && <span className="message-sender">{message.sender}: </span>}
-                  {message.content}
-                  <span className="message-timestamp">{formatTime(message.timestamp)}</span>
-                </motion.div>
-              ))
-            )}
+                  No hay mensajes aún. ¡Sé el primero en escribir!
+                </motion.p>
+              ) : (
+                chatMessages
+                  .filter(message => message.type === 'user')
+                  .map(message => (
+                    <motion.div
+                      key={message.id}
+                      className="chat-message"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <span className="message-sender">{message.sender}: </span>
+                      <span className="message-content">{message.content}</span>
+                      <span className="message-timestamp">{formatTime(message.timestamp)}</span>
+                    </motion.div>
+                  ))
+              )}
               <div ref={chatEndRef} />
             </div>
 
