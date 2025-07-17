@@ -1,0 +1,53 @@
+/* Reset y estilos base */
+* {
+    box-sizing: border-box;
+}
+
+/* Estilos globales para scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--discord-border);
+    border-radius: var(--border-radius-sm);
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color var(--transition-normal);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--discord-text-muted);
+    background-clip: content-box;
+}
+
+/* Scrollbar para Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--discord-border) transparent;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--discord-bg);
+    color: var(--discord-text-primary);
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+/* Estilos base para la aplicación */
+.App {
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    overflow: hidden;
+}

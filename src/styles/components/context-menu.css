@@ -1,0 +1,109 @@
+/* Estilos para el menú contextual de usuarios */
+
+.user-context-menu {
+    position: fixed;
+    background: var(--discord-secondary);
+    border: 1px solid var(--discord-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--discord-shadow);
+    min-width: 250px;
+    z-index: var(--z-dropdown);
+    overflow: hidden;
+}
+
+/* Header del menú contextual */
+.context-menu-header {
+    background: var(--discord-tertiary);
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--discord-border);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.context-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--discord-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.context-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.context-user-info h4 {
+    color: var(--discord-text-primary);
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.context-user-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Opciones del menú contextual */
+.context-menu-options {
+    padding: var(--spacing-sm);
+}
+
+.context-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: none;
+    border: none;
+    color: var(--discord-text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: background-color var(--transition-normal);
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+.context-option:hover {
+    background: var(--discord-hover);
+}
+
+.context-option:first-child {
+    margin-top: 0;
+}
+
+.context-option:last-child {
+    margin-bottom: 0;
+}
+
+.context-option.danger {
+    color: var(--discord-danger);
+}
+
+.context-option.danger:hover {
+    background: rgba(237, 66, 69, 0.1);
+}
+
+.context-option span:first-child {
+    font-size: 16px;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+}
+
+.context-option span:last-child {
+    flex: 1;
+}

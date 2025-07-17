@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+
 
 interface LobbyHeaderProps {
     isConnected: boolean;

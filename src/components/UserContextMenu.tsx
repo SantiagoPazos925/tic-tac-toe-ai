@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { useEffect } from 'react';
 import { User, ContextMenuPosition } from '../types';
 import { getStatusColor, getStatusText, getAvatarInitial } from '../utils/formatters';
 
@@ -15,6 +16,21 @@ export const UserContextMenu = ({
     onUserAction,
     onClose
 }: UserContextMenuProps) => {
+    // Cerrar el menú cuando se hace clic fuera de él
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('.user-context-menu')) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
+
     return (
         <motion.div
             className="user-context-menu"

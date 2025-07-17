@@ -1,0 +1,99 @@
+/* Estilos para el layout principal */
+
+/* Header del lobby */
+.lobby-header {
+    background: var(--discord-secondary);
+    border-bottom: 1px solid var(--discord-border);
+    padding: var(--spacing-md) var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.lobby-header h1 {
+    color: var(--discord-text-primary);
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Estado de conexión */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: var(--discord-text-secondary);
+    font-size: 12px;
+}
+
+.ping-indicator {
+    color: var(--discord-text-muted);
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.connected {
+    background-color: var(--discord-success);
+    box-shadow: 0 0 8px rgba(87, 242, 135, 0.4);
+}
+
+.status-dot.disconnected {
+    background-color: var(--discord-danger);
+    box-shadow: 0 0 8px rgba(237, 66, 69, 0.4);
+}
+
+/* Layout principal */
+.lobby-container {
+    flex: 1;
+    display: flex;
+    height: calc(100vh - 48px);
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Sidebar izquierdo */
+.left-sidebar {
+    width: var(--discord-sidebar-width);
+    background: var(--discord-tertiary);
+    border-right: 1px solid var(--discord-border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--discord-text-muted);
+    font-size: 14px;
+}
+
+/* Contenido principal */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--discord-bg);
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Sidebar derecho */
+.right-sidebar {
+    width: var(--discord-userlist-width);
+    background: var(--discord-secondary);
+    border-left: 1px solid var(--discord-border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}

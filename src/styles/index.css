@@ -1,0 +1,16 @@
+/* Importar todos los estilos de la aplicación */
+
+/* Base */
+@import './base/variables.css';
+@import './base/reset.css';
+
+/* Componentes */
+@import './components/auth.css';
+@import './components/layout.css';
+@import './components/chat.css';
+@import './components/users.css';
+@import './components/context-menu.css';
+
+/* Utilidades */
+@import './utilities/animations.css';
+@import './utilities/helpers.css';

@@ -60,7 +60,7 @@ interface LobbyProviderProps {
 }
 
 export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
-    const { isConnected, ping, users, chatMessages, socketService, sendPing } = useSocket();
+    const { isConnected, ping, users, chatMessages, socketService } = useSocket();
     const { logout, authUser } = useAuthContext();
 
     // Estado local

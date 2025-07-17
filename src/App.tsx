@@ -10,7 +10,6 @@ import { ChatSection } from './components/ChatSection'
 import { UsersList } from './components/UsersList'
 import { UserProfile } from './components/UserProfile'
 import { UserContextMenu } from './components/UserContextMenu'
-import './styles/App.css'
 
 function App() {
   const { authUser, isAuthenticated } = useAuthContext();
