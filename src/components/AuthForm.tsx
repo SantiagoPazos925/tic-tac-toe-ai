@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuthContext } from '../contexts/AuthContext';
 import { AuthForm as AuthFormType } from '../types';
 import { isValidEmail, isValidUsername, isValidPassword } from '../utils/formatters';
 
-interface AuthFormProps {
-    onAuthSuccess: () => void;
-}
-
-export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
-    const { login, register, isLoading } = useAuth();
+export const AuthForm = () => {
+    const { login, register, isLoading } = useAuthContext();
     const [isLogin, setIsLogin] = useState(true);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -49,7 +45,6 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
             } else {
                 await register(formData);
             }
-            onAuthSuccess();
         } catch (error) {
             console.error('Error de autenticación:', error);
             setErrors({ general: error instanceof Error ? error.message : 'Error de autenticación' });

@@ -15,20 +15,35 @@ export const useSocket = () => {
         // Eventos de conexión
         socketService.onConnect(() => {
             setIsConnected(true);
+            // Limpiar usuarios al reconectar para evitar duplicados
+            setUsers([]);
         });
 
         socketService.onDisconnect(() => {
             setIsConnected(false);
             setPing(null);
+            // Limpiar usuarios al desconectar
+            setUsers([]);
         });
 
         // Eventos de usuarios
         socketService.onUsersList((usersList: User[]) => {
-            setUsers(usersList);
+            // Asegurar que no hay duplicados en la lista del servidor
+            const uniqueUsers = usersList.filter((user, index, self) =>
+                index === self.findIndex(u => u.id === user.id)
+            );
+            setUsers(uniqueUsers);
         });
 
         socketService.onUserJoined((user: User) => {
-            setUsers(prev => [...prev, user]);
+            setUsers(prev => {
+                // Verificar si el usuario ya existe para evitar duplicados
+                const userExists = prev.some(u => u.id === user.id);
+                if (userExists) {
+                    return prev;
+                }
+                return [...prev, user];
+            });
         });
 
         socketService.onUserLeft((user: { id: string; name: string }) => {

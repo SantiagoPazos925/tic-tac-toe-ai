@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
-import { useAuth } from './hooks/useAuth'
+import { useAuthContext } from './contexts/AuthContext'
 import { useSocket } from './hooks/useSocket'
 import { AuthForm } from './components/AuthForm'
 import { User, ContextMenuPosition } from './types'
@@ -9,7 +9,7 @@ import { formatTime, getStatusColor, getStatusText, getAvatarInitial } from './u
 import './styles/App.css'
 
 function App() {
-  const { authUser, isAuthenticated, logout } = useAuth();
+  const { authUser, isAuthenticated, logout } = useAuthContext();
   const { isConnected, ping, users, chatMessages, socketService, sendPing } = useSocket();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -80,10 +80,6 @@ function App() {
       clearInterval(pingInterval);
     };
   }, [isConnected, sendPing]);
-
-  const handleAuthSuccess = () => {
-    // La autenticación exitosa se maneja en el hook useAuth
-  };
 
   const handleStatusChange = (status: 'online' | 'away') => {
     socketService.updateStatus(status);
@@ -181,14 +177,10 @@ function App() {
     }
   };
 
-
-
-
-
   if (!isAuthenticated) {
     return (
       <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <AuthForm onAuthSuccess={handleAuthSuccess} />
+        <AuthForm />
       </motion.div>
     );
   }

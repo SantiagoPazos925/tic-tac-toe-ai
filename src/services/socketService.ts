@@ -4,6 +4,7 @@ import { User, ChatMessage } from '../types';
 class SocketService {
     private socket: Socket | null = null;
     private baseUrl: string;
+    private eventListeners: Map<string, Function[]> = new Map();
 
     constructor() {
         this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -11,7 +12,13 @@ class SocketService {
 
     connect(): Socket {
         if (!this.socket) {
-            this.socket = io(this.baseUrl);
+            this.socket = io(this.baseUrl, {
+                // Configuraciones para evitar reconexiones múltiples
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 20000
+            });
         }
         return this.socket;
     }
@@ -64,54 +71,72 @@ class SocketService {
     // Listeners
     onConnect(callback: () => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('connect');
             this.socket.on('connect', callback);
         }
     }
 
     onDisconnect(callback: () => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('disconnect');
             this.socket.on('disconnect', callback);
         }
     }
 
     onUsersList(callback: (users: User[]) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('users-list');
             this.socket.on('users-list', callback);
         }
     }
 
     onUserJoined(callback: (user: User) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('user-joined');
             this.socket.on('user-joined', callback);
         }
     }
 
     onUserLeft(callback: (user: { id: string; name: string }) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('user-left');
             this.socket.on('user-left', callback);
         }
     }
 
     onUserUpdated(callback: (user: User) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('user-updated');
             this.socket.on('user-updated', callback);
         }
     }
 
     onChatHistory(callback: (messages: ChatMessage[]) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('chat-history');
             this.socket.on('chat-history', callback);
         }
     }
 
     onChatMessage(callback: (message: ChatMessage) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('chat-message');
             this.socket.on('chat-message', callback);
         }
     }
 
     onPong(callback: (timestamp: number) => void): void {
         if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('pong');
             this.socket.on('pong', callback);
         }
     }
