@@ -46,7 +46,17 @@ interface LobbyUser {
     joinedAt: Date;
 }
 
+// Almacenar mensajes del chat
+interface ChatMessage {
+    id: string;
+    type: 'user' | 'system';
+    content: string;
+    sender?: string;
+    timestamp: Date;
+}
+
 const connectedUsers = new Map<string, LobbyUser>();
+const chatMessages: ChatMessage[] = [];
 
 // Health check para Railway
 app.get('/health', (req, res) => {
@@ -101,13 +111,49 @@ io.on('connection', (socket) => {
 
         connectedUsers.set(socket.id, user);
 
+        // Crear mensaje del sistema
+        const systemMessage: ChatMessage = {
+            id: Date.now().toString(),
+            type: 'system',
+            content: `${userData.name} se unió al lobby`,
+            timestamp: new Date()
+        };
+        chatMessages.push(systemMessage);
+
         // Notificar a todos los usuarios sobre el nuevo usuario
         io.emit('user-joined', user);
+
+        // Enviar mensaje del sistema a todos
+        io.emit('chat-message', systemMessage);
 
         // Enviar lista actual de usuarios al nuevo usuario
         socket.emit('users-list', Array.from(connectedUsers.values()));
 
+        // Enviar historial del chat al nuevo usuario
+        socket.emit('chat-history', chatMessages);
+
         console.log(`Usuario ${userData.name} se unió al lobby`);
+    });
+
+    // Enviar mensaje del chat
+    socket.on('send-message', (messageData: { content: string }) => {
+        const user = connectedUsers.get(socket.id);
+        if (user && messageData.content.trim()) {
+            const chatMessage: ChatMessage = {
+                id: Date.now().toString(),
+                type: 'user',
+                content: messageData.content.trim(),
+                sender: user.name,
+                timestamp: new Date()
+            };
+
+            chatMessages.push(chatMessage);
+
+            // Enviar mensaje a todos los usuarios
+            io.emit('chat-message', chatMessage);
+
+            console.log(`Mensaje de ${user.name}: ${messageData.content}`);
+        }
     });
 
     // Cambiar estado del usuario
@@ -117,6 +163,28 @@ io.on('connection', (socket) => {
             user.status = status;
             connectedUsers.set(socket.id, user);
             io.emit('user-updated', user);
+        }
+    });
+
+    // Salir del lobby manualmente
+    socket.on('leave-lobby', () => {
+        const user = connectedUsers.get(socket.id);
+        if (user) {
+            connectedUsers.delete(socket.id);
+
+            // Crear mensaje del sistema
+            const systemMessage: ChatMessage = {
+                id: Date.now().toString(),
+                type: 'system',
+                content: `${user.name} cerró sesión`,
+                timestamp: new Date()
+            };
+            chatMessages.push(systemMessage);
+
+            io.emit('user-left', { id: socket.id, name: user.name });
+            io.emit('chat-message', systemMessage);
+
+            console.log(`Usuario ${user.name} cerró sesión`);
         }
     });
 
@@ -130,7 +198,19 @@ io.on('connection', (socket) => {
         const user = connectedUsers.get(socket.id);
         if (user) {
             connectedUsers.delete(socket.id);
+
+            // Crear mensaje del sistema
+            const systemMessage: ChatMessage = {
+                id: Date.now().toString(),
+                type: 'system',
+                content: `${user.name} se desconectó`,
+                timestamp: new Date()
+            };
+            chatMessages.push(systemMessage);
+
             io.emit('user-left', { id: socket.id, name: user.name });
+            io.emit('chat-message', systemMessage);
+
             console.log(`Usuario ${user.name} se desconectó`);
         }
     });
