@@ -188,9 +188,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Ping para mantener conexión
-    socket.on('ping', () => {
-        socket.emit('pong');
+    // Ping para mantener conexión y medir latencia
+    socket.on('ping', (timestamp: number) => {
+        socket.emit('pong', timestamp);
     });
 
     // Desconexión

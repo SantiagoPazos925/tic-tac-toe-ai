@@ -28,6 +28,7 @@ interface ChatMessage {
 function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [ping, setPing] = useState<number | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -36,6 +37,9 @@ function App() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [showUserContextMenu, setShowUserContextMenu] = useState(false);
+  const [contextMenuUser, setContextMenuUser] = useState<User | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   // Formulario de autenticación
@@ -72,6 +76,7 @@ function App() {
 
     newSocket.on('disconnect', () => {
       setIsConnected(false);
+      setPing(null);
     });
 
     newSocket.on('users-list', (usersList: User[]) => {
@@ -103,6 +108,12 @@ function App() {
       setChatMessages(prev => [...prev, message]);
     });
 
+    // Manejar respuesta del ping
+    newSocket.on('pong', (timestamp: number) => {
+      const pingTime = Date.now() - timestamp;
+      setPing(pingTime);
+    });
+
     setSocket(newSocket);
 
     return () => {
@@ -116,12 +127,15 @@ function App() {
     }
   }, [chatMessages]);
 
-  // Cerrar menú de estado al hacer clic fuera
+  // Cerrar menús al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (showStatusMenu && !target.closest('.user-profile')) {
         setShowStatusMenu(false);
+      }
+      if (showUserContextMenu && !target.closest('.user-context-menu')) {
+        closeUserContextMenu();
       }
     };
 
@@ -129,7 +143,7 @@ function App() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showStatusMenu]);
+  }, [showStatusMenu, showUserContextMenu]);
 
   // Unirse al lobby cuando el usuario se autentica y el socket está conectado
   useEffect(() => {
@@ -147,6 +161,19 @@ function App() {
       }
     }
   }, [users, authUser]);
+
+  // Enviar pings periódicos para medir latencia
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const pingInterval = setInterval(() => {
+      socket.emit('ping', Date.now());
+    }, 5000); // Ping cada 5 segundos
+
+    return () => {
+      clearInterval(pingInterval);
+    };
+  }, [socket, isConnected]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +219,76 @@ function App() {
 
   const toggleStatusMenu = () => {
     setShowStatusMenu(!showStatusMenu);
+  };
+
+  const handleUserContextMenu = (e: React.MouseEvent, user: User) => {
+    e.preventDefault(); // Prevenir el menú contextual del navegador
+
+    const menuWidth = 250; // Ancho aproximado del menú
+    const menuHeight = 300; // Alto aproximado del menú
+    const padding = 10; // Padding desde el borde
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    // Obtener la posición del contenedor users-list
+    const usersListElement = document.querySelector('.users-list') as HTMLElement;
+    const usersListRect = usersListElement?.getBoundingClientRect();
+    const minLeftPosition = usersListRect ? usersListRect.left : padding;
+
+    // Ajustar posición horizontal si está muy cerca del borde derecho
+    if (x + menuWidth > window.innerWidth - padding) {
+      x = e.clientX - menuWidth;
+    }
+
+    // Ajustar posición vertical si está muy cerca del borde inferior
+    if (y + menuHeight > window.innerHeight - padding) {
+      y = e.clientY - menuHeight;
+    }
+
+    // Asegurar que el borde izquierdo del menú coincida como mínimo con el borde izquierdo de users-list
+    if (x < minLeftPosition) {
+      x = minLeftPosition;
+    }
+
+    // Asegurar que no se salga por arriba
+    if (y < padding) {
+      y = padding;
+    }
+
+    setContextMenuUser(user);
+    setContextMenuPosition({ x, y });
+    setShowUserContextMenu(true);
+  };
+
+  const closeUserContextMenu = () => {
+    setShowUserContextMenu(false);
+    setContextMenuUser(null);
+  };
+
+  const handleUserAction = (action: string) => {
+    if (!contextMenuUser) return;
+
+    switch (action) {
+      case 'profile':
+        // Aquí se podría abrir un perfil del usuario
+        console.log(`Ver perfil de ${contextMenuUser.name}`);
+        break;
+      case 'message':
+        // Aquí se podría abrir un chat privado
+        console.log(`Enviar mensaje a ${contextMenuUser.name}`);
+        break;
+      case 'invite':
+        // Aquí se podría invitar a jugar
+        console.log(`Invitar a ${contextMenuUser.name} a jugar`);
+        break;
+      case 'block':
+        // Aquí se podría bloquear al usuario
+        console.log(`Bloquear a ${contextMenuUser.name}`);
+        break;
+    }
+
+    closeUserContextMenu();
   };
 
   const handleLogout = () => {
@@ -252,6 +349,11 @@ function App() {
           <div className="connection-status">
             <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
             {isConnected ? 'Conectado' : 'Desconectado'}
+            {isConnected && ping !== null && (
+              <span className="ping-indicator">
+                • {ping}ms
+              </span>
+            )}
           </div>
 
           <div className="auth-form-container">
@@ -326,6 +428,11 @@ function App() {
         <div className="connection-status">
           <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
           {isConnected ? 'Conectado' : 'Desconectado'}
+          {isConnected && ping !== null && (
+            <span className="ping-indicator">
+              • {ping}ms
+            </span>
+          )}
         </div>
       </header>
 
@@ -412,6 +519,7 @@ function App() {
                   animate={{ y: 0, opacity: 1 }}
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.4 }}
+                  onContextMenu={(e) => handleUserContextMenu(e, user)}
                 >
                   <div className="user-avatar">
                     {user.name.charAt(0).toUpperCase()}
@@ -501,6 +609,108 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* User Context Menu */}
+      {showUserContextMenu && contextMenuUser && (
+        <motion.div
+          className="user-context-menu"
+          style={{
+            left: contextMenuPosition.x,
+            top: contextMenuPosition.y
+          }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.15 }}
+          onAnimationComplete={() => {
+            // Ajustar posición después de que el menú se renderice
+            const menuElement = document.querySelector('.user-context-menu') as HTMLElement;
+            if (menuElement) {
+              const rect = menuElement.getBoundingClientRect();
+              const padding = 10;
+              let newX = contextMenuPosition.x;
+              let newY = contextMenuPosition.y;
+
+              // Ajustar si se sale por la derecha
+              if (rect.right > window.innerWidth - padding) {
+                newX = window.innerWidth - rect.width - padding;
+              }
+
+              // Ajustar si se sale por abajo
+              if (rect.bottom > window.innerHeight - padding) {
+                newY = window.innerHeight - rect.height - padding;
+              }
+
+              // Ajustar si se sale por la izquierda
+              if (rect.left < padding) {
+                newX = padding;
+              }
+
+              // Ajustar si se sale por arriba
+              if (rect.top < padding) {
+                newY = padding;
+              }
+
+              if (newX !== contextMenuPosition.x || newY !== contextMenuPosition.y) {
+                setContextMenuPosition({ x: newX, y: newY });
+              }
+            }
+          }}
+        >
+          <div className="context-menu-header">
+            <div className="context-user-avatar">
+              {contextMenuUser.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="context-user-info">
+              <h4>{contextMenuUser.name}</h4>
+              <span
+                className="context-user-status"
+                style={{ color: getStatusColor(contextMenuUser.status) }}
+              >
+                {getStatusText(contextMenuUser.status)}
+              </span>
+            </div>
+          </div>
+          <div className="context-menu-options">
+            <motion.button
+              onClick={() => handleUserAction('profile')}
+              className="context-option"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>👤</span>
+              <span>Ver Perfil</span>
+            </motion.button>
+            <motion.button
+              onClick={() => handleUserAction('message')}
+              className="context-option"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>💬</span>
+              <span>Enviar Mensaje</span>
+            </motion.button>
+            <motion.button
+              onClick={() => handleUserAction('invite')}
+              className="context-option"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>🎮</span>
+              <span>Invitar a Jugar</span>
+            </motion.button>
+            <motion.button
+              onClick={() => handleUserAction('block')}
+              className="context-option danger"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>🚫</span>
+              <span>Bloquear Usuario</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
     </motion.div >
   );
 }
