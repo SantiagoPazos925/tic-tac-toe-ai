@@ -4,7 +4,7 @@ import { User, ChatMessage } from '../types';
 class SocketService {
     private socket: Socket | null = null;
     private baseUrl: string;
-    private eventListeners: Map<string, Function[]> = new Map();
+    //private eventListeners: Map<string, Function[]> = new Map();
 
     constructor() {
         this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
