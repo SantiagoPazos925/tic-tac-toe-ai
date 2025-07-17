@@ -1,125 +1,31 @@
 import { useState, useEffect, useRef } from 'react'
-import { io, Socket } from 'socket.io-client'
 import { motion } from 'motion/react'
-import './App.css'
-
-interface User {
-  id: string;
-  name: string;
-  status: 'online' | 'away' | 'offline';
-  joinedAt: Date;
-}
-
-interface AuthUser {
-  id: number;
-  username: string;
-  email: string;
-  token: string;
-}
-
-interface ChatMessage {
-  id: string;
-  type: 'user' | 'system';
-  content: string;
-  sender?: string;
-  timestamp: Date;
-}
+import { useAuth } from './hooks/useAuth'
+import { useSocket } from './hooks/useSocket'
+import { AuthForm } from './components/AuthForm'
+import { User, ContextMenuPosition } from './types'
+// import { ChatMessage, UserAction, AuthUser } from './types' // Para uso futuro
+import { formatTime, getStatusColor, getStatusText, getAvatarInitial } from './utils/formatters'
+import './styles/App.css'
 
 function App() {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [ping, setPing] = useState<number | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const { authUser, isAuthenticated, logout } = useAuth();
+  const { isConnected, ping, users, chatMessages, socketService, sendPing } = useSocket();
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [showAuth, setShowAuth] = useState(true);
-  const [isLogin, setIsLogin] = useState(true);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showUserContextMenu, setShowUserContextMenu] = useState(false);
   const [contextMenuUser, setContextMenuUser] = useState<User | null>(null);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition>({ x: 0, y: 0 });
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Formulario de autenticación
-  const [authForm, setAuthForm] = useState({
-    username: '',
-    email: '',
-    password: ''
-  });
-
-  // Conectar al servidor y manejar sesión
+  // Unirse al lobby cuando el usuario se autentica y el socket está conectado
   useEffect(() => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const newSocket = io(baseUrl);
-
-    // Verificar si hay sesión guardada al conectar
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    let currentUser = null;
-
-    if (token && user) {
-      currentUser = JSON.parse(user);
-      setAuthUser(currentUser);
-      setShowAuth(false);
+    if (authUser && isConnected) {
+      socketService.joinLobby(authUser.username);
     }
-
-    newSocket.on('connect', () => {
-      setIsConnected(true);
-
-      // Si el usuario ya está autenticado, unirse al lobby
-      if (currentUser) {
-        newSocket.emit('join-lobby', { name: currentUser.username });
-      }
-    });
-
-    newSocket.on('disconnect', () => {
-      setIsConnected(false);
-      setPing(null);
-    });
-
-    newSocket.on('users-list', (usersList: User[]) => {
-      setUsers(usersList);
-    });
-
-    newSocket.on('user-joined', (user: User) => {
-      setUsers(prev => [...prev, user]);
-    });
-
-    newSocket.on('user-left', (user: { id: string; name: string }) => {
-      setUsers(prev => prev.filter(u => u.id !== user.id));
-    });
-
-    newSocket.on('user-updated', (updatedUser: User) => {
-      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-      // Actualizar también el usuario actual si es el mismo
-      if (currentUser && currentUser.id === updatedUser.id) {
-        setCurrentUser(updatedUser);
-      }
-    });
-
-    // Eventos del chat
-    newSocket.on('chat-history', (messages: ChatMessage[]) => {
-      setChatMessages(messages);
-    });
-
-    newSocket.on('chat-message', (message: ChatMessage) => {
-      setChatMessages(prev => [...prev, message]);
-    });
-
-    // Manejar respuesta del ping
-    newSocket.on('pong', (timestamp: number) => {
-      const pingTime = Date.now() - timestamp;
-      setPing(pingTime);
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.close();
-    };
-  }, []);
+  }, [authUser, isConnected, socketService]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -147,10 +53,10 @@ function App() {
 
   // Unirse al lobby cuando el usuario se autentica y el socket está conectado
   useEffect(() => {
-    if (authUser && socket && socket.connected) {
-      socket.emit('join-lobby', { name: authUser.username });
+    if (authUser && isConnected) {
+      socketService.joinLobby(authUser.username);
     }
-  }, [authUser, socket]);
+  }, [authUser, isConnected, socketService]);
 
   // Actualizar el usuario actual cuando se recibe la lista de usuarios
   useEffect(() => {
@@ -164,56 +70,23 @@ function App() {
 
   // Enviar pings periódicos para medir latencia
   useEffect(() => {
-    if (!socket || !isConnected) return;
+    if (!isConnected) return;
 
     const pingInterval = setInterval(() => {
-      socket.emit('ping', Date.now());
+      sendPing();
     }, 5000); // Ping cada 5 segundos
 
     return () => {
       clearInterval(pingInterval);
     };
-  }, [socket, isConnected]);
+  }, [isConnected, sendPing]);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const url = `${baseUrl}${endpoint}`;
-
-      const body = isLogin
-        ? { username: authForm.username, password: authForm.password }
-        : authForm;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAuthUser(data.user);
-        setShowAuth(false);
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-      } else {
-        console.error('Error de autenticación:', data.error);
-      }
-    } catch (error) {
-      console.error('Error de conexión:', error);
-    }
+  const handleAuthSuccess = () => {
+    // La autenticación exitosa se maneja en el hook useAuth
   };
 
   const handleStatusChange = (status: 'online' | 'away') => {
-    if (socket) {
-      socket.emit('update-status', status);
-    }
+    socketService.updateStatus(status);
     setShowStatusMenu(false);
   };
 
@@ -293,130 +166,29 @@ function App() {
 
   const handleLogout = () => {
     // Notificar al servidor que el usuario se desconecta del lobby
-    if (socket && currentUser) {
-      socket.emit('leave-lobby');
+    if (currentUser) {
+      socketService.leaveLobby();
     }
-
-    setAuthUser(null);
+    logout();
     setCurrentUser(null);
-    setShowAuth(true);
-    setUsers([]);
-    setChatMessages([]);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim() && socket) {
-      socket.emit('send-message', { content: newMessage });
+    if (newMessage.trim()) {
+      socketService.sendMessage(newMessage);
       setNewMessage('');
     }
   };
 
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return '#10b981';
-      case 'away': return '#f59e0b';
-      case 'offline': return '#6b7280';
-      default: return '#6b7280';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'online': return 'En línea';
-      case 'away': return 'Ausente';
-      case 'offline': return 'Desconectado';
-      default: return 'Desconocido';
-    }
-  };
 
 
 
-  if (showAuth) {
+
+  if (!isAuthenticated) {
     return (
       <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <motion.div className="auth-container" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }}>
-          <h1>🎮 Lobby de Juegos</h1>
-          <div className="connection-status">
-            <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
-            {isConnected ? 'Conectado' : 'Desconectado'}
-            {isConnected && ping !== null && (
-              <span className="ping-indicator">
-                • {ping}ms
-              </span>
-            )}
-          </div>
-
-          <div className="auth-form-container">
-            <h2>{isLogin ? 'Iniciar Sesión' : 'Registrarse'}</h2>
-
-            {/* Removed message banner as per edit hint */}
-
-            <form onSubmit={handleAuth} className="auth-form">
-              <input
-                type="text"
-                placeholder="Nombre de usuario"
-                value={authForm.username}
-                onChange={(e) => setAuthForm({ ...authForm, username: e.target.value })}
-                required
-                className="auth-input"
-              />
-
-              {!isLogin && (
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={authForm.email}
-                  onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                  required
-                  className="auth-input"
-                />
-              )}
-
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={authForm.password}
-                onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-                required
-                className="auth-input"
-              />
-
-              <motion.button
-                type="submit"
-                className="auth-button"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
-              </motion.button>
-            </form>
-
-            <div className="auth-switch">
-              <p>
-                {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
-                <motion.button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="switch-button"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {isLogin ? 'Registrarse' : 'Iniciar Sesión'}
-                </motion.button>
-              </p>
-            </div>
-          </div>
-        </motion.div>
+        <AuthForm onAuthSuccess={handleAuthSuccess} />
       </motion.div>
     );
   }
@@ -522,7 +294,7 @@ function App() {
                   onContextMenu={(e) => handleUserContextMenu(e, user)}
                 >
                   <div className="user-avatar">
-                    {user.name.charAt(0).toUpperCase()}
+                    {getAvatarInitial(user.name)}
                   </div>
                   <div className="user-details">
                     <h4>{user.name}</h4>
@@ -546,7 +318,7 @@ function App() {
           <div className="user-profile-section">
             <div className="user-profile">              <div className="profile-header" onClick={toggleStatusMenu}>
               <div className="profile-avatar">
-                {authUser?.username.charAt(0).toUpperCase()}
+                {authUser ? getAvatarInitial(authUser.username) : ''}
               </div>
               <div className="profile-info">
                 <h3>{authUser?.username}</h3>
@@ -659,7 +431,7 @@ function App() {
         >
           <div className="context-menu-header">
             <div className="context-user-avatar">
-              {contextMenuUser.name.charAt(0).toUpperCase()}
+              {getAvatarInitial(contextMenuUser.name)}
             </div>
             <div className="context-user-info">
               <h4>{contextMenuUser.name}</h4>

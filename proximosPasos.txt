@@ -1,0 +1,6 @@
+Crear más componentes para el lobby (Chat, UserList, etc.)
+Implementar Context API para estado global
+Agregar tests para servicios y hooks
+Refactorizar el backend siguiendo la misma estructura
+Agregar manejo de errores más robusto
+Implementar lazy loading para componentes
