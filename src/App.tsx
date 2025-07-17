@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { motion } from 'motion/react'
 import './App.css'
 
 interface User {
@@ -32,7 +33,7 @@ function App() {
     password: ''
   });
 
-  // Conectar al servidor
+  // Conectar al servidor y manejar sesión
   useEffect(() => {
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const newSocket = io(baseUrl);
@@ -40,8 +41,11 @@ function App() {
     // Verificar si hay sesión guardada al conectar
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
+    let currentUser = null;
+
     if (token && user) {
-      setAuthUser(JSON.parse(user));
+      currentUser = JSON.parse(user);
+      setAuthUser(currentUser);
       setShowAuth(false);
     }
 
@@ -50,8 +54,8 @@ function App() {
       setMessage('Conectado al servidor');
 
       // Si el usuario ya está autenticado, unirse al lobby
-      if (authUser) {
-        newSocket.emit('join-lobby', { name: authUser.username });
+      if (currentUser) {
+        newSocket.emit('join-lobby', { name: currentUser.username });
       }
     });
 
@@ -85,6 +89,13 @@ function App() {
     };
   }, []);
 
+  // Unirse al lobby cuando el usuario se autentica y el socket está conectado
+  useEffect(() => {
+    if (authUser && socket && socket.connected) {
+      socket.emit('join-lobby', { name: authUser.username });
+    }
+  }, [authUser, socket]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -113,11 +124,6 @@ function App() {
         setMessage(data.message);
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-
-        // Unirse al lobby después de autenticarse
-        if (socket) {
-          socket.emit('join-lobby', { name: data.user.username });
-        }
       } else {
         setMessage(data.error);
       }
@@ -167,27 +173,12 @@ function App() {
     }
   };
 
-  // Verificar si hay sesión guardada
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
 
-    if (token && user) {
-      const parsedUser = JSON.parse(user);
-      setAuthUser(parsedUser);
-      setShowAuth(false);
-
-      // Unirse al lobby si ya está conectado al socket
-      if (socket && socket.connected) {
-        socket.emit('join-lobby', { name: parsedUser.username });
-      }
-    }
-  }, [socket]);
 
   if (showAuth) {
     return (
-      <div className="App">
-        <div className="auth-container">
+      <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div className="auth-container" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }}>
           <h1>🎮 Lobby de Juegos</h1>
           <div className="connection-status">
             <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
@@ -198,9 +189,15 @@ function App() {
             <h2>{isLogin ? 'Iniciar Sesión' : 'Registrarse'}</h2>
 
             {message && (
-              <div className={`message-banner ${message.includes('Error') ? 'error' : ''}`}>
+              <motion.div
+                className={`message-banner ${message.includes('Error') ? 'error' : ''}`}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
                 {message}
-              </div>
+              </motion.div>
             )}
 
             <form onSubmit={handleAuth} className="auth-form">
@@ -233,31 +230,39 @@ function App() {
                 className="auth-input"
               />
 
-              <button type="submit" className="auth-button">
+              <motion.button
+                type="submit"
+                className="auth-button"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
-              </button>
+              </motion.button>
             </form>
 
             <div className="auth-switch">
               <p>
                 {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
-                <button
+                <motion.button
+                  type="button"
                   onClick={() => setIsLogin(!isLogin)}
                   className="switch-button"
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {isLogin ? 'Registrarse' : 'Iniciar Sesión'}
-                </button>
+                </motion.button>
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="App">
-      <div className="lobby-container">
+    <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="lobby-container" initial={{ scale: 0.97, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }}>
         <header className="lobby-header">
           <h1>🎮 Lobby de Juegos</h1>
           <div className="user-info">
@@ -268,29 +273,54 @@ function App() {
             {authUser && (
               <div className="current-user">
                 <span>Bienvenido, {authUser.username}</span>
-                <button onClick={handleLogout} className="logout-button">
+                <motion.button
+                  onClick={handleLogout}
+                  className="logout-button"
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   Cerrar Sesión
-                </button>
+                </motion.button>
               </div>
             )}
           </div>
         </header>
 
         {message && (
-          <div className="message-banner">
+          <motion.div
+            className="message-banner"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             {message}
-          </div>
+          </motion.div>
         )}
 
         <div className="lobby-content">
-          <div className="users-section">
+          <section className="users-section">
             <h2>👥 Usuarios en Línea ({users.length})</h2>
             <div className="users-list">
               {users.length === 0 ? (
-                <p className="no-users">No hay usuarios en línea</p>
+                <motion.p
+                  className="no-users"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  No hay usuarios en línea
+                </motion.p>
               ) : (
                 users.map(user => (
-                  <div key={user.id} className="user-card">
+                  <motion.div
+                    key={user.id}
+                    className="user-card"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ duration: 0.4 }}
+                  >
                     <div className="user-info">
                       <div className="user-avatar">
                         {user.name.charAt(0).toUpperCase()}
@@ -308,32 +338,36 @@ function App() {
                     <div className="user-time">
                       Desde {formatTime(user.joinedAt)}
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="controls-section">
+          <motion.section className="controls-section" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
             <h3>Controles</h3>
             <div className="status-controls">
-              <button
+              <motion.button
                 onClick={() => handleStatusChange('online')}
                 className="status-button online"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.96 }}
               >
                 En Línea
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => handleStatusChange('away')}
                 className="status-button away"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.96 }}
               >
                 Ausente
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.section>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
