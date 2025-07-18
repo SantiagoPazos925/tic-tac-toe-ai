@@ -1,9 +1,19 @@
 /* Estilos para usuarios y perfiles */
 
+/* Contenedor principal de usuarios */
+.users-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    min-height: 0;
+}
+
 /* Sección de usuarios */
 .users-section {
-    flex: 1;
-    padding: var(--spacing-md);
+    flex-shrink: 0;
 }
 
 .users-section h3 {
@@ -19,14 +29,11 @@
 
 /* Lista de usuarios */
 .users-list {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: var(--spacing-sm);
-    padding-left: var(--spacing-sm);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    max-height: calc(100vh - 200px);
+    padding: 0 var(--spacing-sm);
+    margin-top: var(--spacing-md);
 }
 
 /* Indicador visual cuando hay muchos usuarios */
@@ -115,6 +122,10 @@
     border-top: 1px solid var(--discord-border);
     padding: var(--spacing-lg);
     flex-shrink: 0;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
 }
 
 .user-profile {
