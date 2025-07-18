@@ -19,12 +19,13 @@
 .users-section h3 {
     color: var(--discord-text-primary);
     margin: 0 0 var(--spacing-lg) 0;
-    font-size: 14px;
+    font-size: var(--font-size-md);
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     padding: 0 var(--spacing-sm);
+    transition: all var(--transition-normal);
 }
 
 /* Lista de usuarios */

@@ -55,4 +55,39 @@
     --z-dropdown: 1000;
     --z-modal: 2000;
     --z-tooltip: 3000;
+
+    /* Breakpoints para responsive design */
+    --mobile: 480px;
+    --tablet: 768px;
+    --desktop: 1024px;
+    --large-desktop: 1200px;
+
+    /* Dimensiones responsive */
+    --sidebar-width-mobile: 0px;
+    --sidebar-width-tablet: 200px;
+    --sidebar-width-desktop: 240px;
+
+    --userlist-width-mobile: 0px;
+    --userlist-width-tablet: 200px;
+    --userlist-width-desktop: 240px;
+
+    /* Espaciado responsive */
+    --padding-mobile: var(--spacing-md);
+    --padding-tablet: var(--spacing-lg);
+    --padding-desktop: var(--spacing-xl);
+
+    /* Tamaños de fuente responsive */
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 20px;
+    --font-size-3xl: 24px;
+
+    /* Alturas de componentes */
+    --header-height: 48px;
+    --input-height: 40px;
+    --button-height: 40px;
+    --card-height: 60px;
 }

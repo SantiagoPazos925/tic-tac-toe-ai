@@ -8,18 +8,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 48px;
+    height: var(--header-height);
     flex-shrink: 0;
+    transition: all var(--transition-normal);
 }
 
 .lobby-header h1 {
     color: var(--discord-text-primary);
     margin: 0;
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    transition: all var(--transition-normal);
 }
 
 /* Estado de conexión */
@@ -59,9 +61,10 @@
 .lobby-container {
     flex: 1;
     display: flex;
-    height: calc(100vh - 48px);
+    height: calc(100vh - var(--header-height));
     min-height: 0;
     overflow: hidden;
+    transition: all var(--transition-normal);
 }
 
 /* Sidebar izquierdo */
@@ -74,7 +77,8 @@
     align-items: center;
     justify-content: center;
     color: var(--discord-text-muted);
-    font-size: 14px;
+    font-size: var(--font-size-md);
+    transition: all var(--transition-normal);
 }
 
 /* Contenido principal */
@@ -97,4 +101,5 @@
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    transition: all var(--transition-normal);
 }
