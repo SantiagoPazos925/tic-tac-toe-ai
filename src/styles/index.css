@@ -1,10 +1,7 @@
-/* Importar todos los estilos de la aplicación */
+/* Importar Tailwind CSS */
+@import './tailwind.css';
 
-/* Base */
-@import './base/variables.css';
-@import './base/reset.css';
-
-/* Componentes */
+/* Componentes específicos */
 @import './components/auth.css';
 @import './components/layout.css';
 @import './components/chat.css';

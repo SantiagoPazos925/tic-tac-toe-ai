@@ -40,23 +40,6 @@
     opacity: 0.8;
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.status-dot.connected {
-    background-color: var(--discord-success);
-    box-shadow: 0 0 8px rgba(87, 242, 135, 0.4);
-}
-
-.status-dot.disconnected {
-    background-color: var(--discord-danger);
-    box-shadow: 0 0 8px rgba(237, 66, 69, 0.4);
-}
-
 /* Layout principal */
 .lobby-container {
     flex: 1;

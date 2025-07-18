@@ -41,6 +41,28 @@
     padding: var(--spacing-md) var(--spacing-lg);
     max-height: 200px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--discord-border) transparent;
+}
+
+.system-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.system-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.system-messages::-webkit-scrollbar-thumb {
+    background: var(--discord-border);
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+}
+
+.system-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--discord-text-muted);
+    background-clip: content-box;
 }
 
 .system-messages-title {
@@ -94,6 +116,30 @@
     flex-direction: column;
     gap: var(--spacing-sm);
     background: var(--discord-bg);
+    scrollbar-width: thin;
+    scrollbar-color: var(--discord-border) transparent;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: var(--border-radius-sm);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--discord-border);
+    border-radius: var(--border-radius-sm);
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color var(--transition-normal);
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--discord-text-muted);
+    background-clip: content-box;
 }
 
 .chat-message {
@@ -112,13 +158,13 @@
     background: var(--discord-hover);
     border-color: var(--discord-accent);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--discord-shadow-hover);
 }
 
 .message-sender {
     color: var(--discord-accent);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 17px;
     flex-shrink: 0;
 }
 
@@ -127,6 +173,7 @@
     font-size: 14px;
     line-height: 1.4;
     flex: 1;
+    font-family: var(--font-family-emoji);
 }
 
 .message-timestamp {
@@ -145,8 +192,10 @@
     display: flex;
     gap: var(--spacing-md);
     flex-shrink: 0;
+    align-items: center;
 }
 
+/* Input del chat */
 .chat-input {
     flex: 1;
     padding: var(--spacing-md) var(--spacing-lg);
@@ -154,10 +203,11 @@
     border-radius: var(--border-radius-sm);
     background-color: var(--discord-input-bg);
     color: var(--discord-text-primary);
-    font-size: 14px;
-    font-family: inherit;
+    font-size: 17px;
+    font-family: var(--font-family-emoji);
     outline: none;
     transition: all var(--transition-normal);
+    min-height: var(--input-height);
 }
 
 .chat-input::placeholder {
@@ -166,26 +216,32 @@
 
 .chat-input:focus {
     border-color: var(--discord-accent);
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+    box-shadow: var(--discord-shadow-focus);
 }
 
+/* Botón de enviar */
 .send-button {
     background: var(--discord-accent);
     color: white;
     border: none;
-    padding: var(--spacing-md) var(--spacing-xl);
+    padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--border-radius-sm);
-    font-size: 14px;
+    font-size: var(--font-size-md);
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-normal);
-    font-family: inherit;
+    font-family: var(--font-family-base);
+    min-height: var(--button-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 80px;
 }
 
 .send-button:hover {
     background: var(--discord-accent-hover);
     transform: translateY(-1px);
+    box-shadow: var(--discord-shadow-hover);
 }
 
 .send-button:active {
@@ -204,27 +260,6 @@
     text-align: center;
     font-style: italic;
     margin: auto;
-}
-
-/* Scrollbar específico para mensajes del sistema */
-.system-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.system-messages::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.system-messages::-webkit-scrollbar-thumb {
-    background: var(--discord-border);
-    border-radius: 3px;
-    border: 1px solid transparent;
-    background-clip: content-box;
-}
-
-.system-messages::-webkit-scrollbar-thumb:hover {
-    background: var(--discord-text-muted);
-    background-clip: content-box;
 }
 
 /* Estilos para el emoji picker */
@@ -296,7 +331,7 @@
     --epr-search-input-font-size: 14px;
     --epr-search-input-border-width: 1px;
     --epr-search-input-focus-border-color: var(--discord-accent);
-    --epr-search-input-focus-box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+    --epr-search-input-focus-box-shadow: var(--discord-shadow-focus);
 }
 
 /* Forzar tema oscuro en el emoji picker */
@@ -309,24 +344,9 @@
 
 /* Estilos específicos para los emojis */
 .emoji-picker-popup .EmojiPickerReact .epr-emoji {
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", Arial, sans-serif !important;
+    font-family: var(--font-family-emoji) !important;
     font-size: 24px !important;
     line-height: 1 !important;
-    text-rendering: optimizeLegibility !important;
-    -webkit-font-smoothing: antialiased !important;
-    -moz-osx-font-smoothing: grayscale !important;
-}
-
-/* Mejorar la consistencia de los emojis en el input */
-.chat-input {
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", Arial, sans-serif !important;
-}
-
-/* Mejorar la consistencia de los emojis en los mensajes */
-.message-content {
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", Arial, sans-serif !important;
-    font-size: 14px !important;
-    line-height: 1.4 !important;
     text-rendering: optimizeLegibility !important;
     -webkit-font-smoothing: antialiased !important;
     -moz-osx-font-smoothing: grayscale !important;
@@ -342,7 +362,7 @@
 
 .emoji-picker-popup .EmojiPickerReact .epr-search:focus {
     border-color: var(--discord-accent) !important;
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2) !important;
+    box-shadow: var(--discord-shadow-focus) !important;
 }
 
 .emoji-picker-popup .EmojiPickerReact .epr-category-nav {
@@ -362,29 +382,4 @@
 .emoji-picker-popup .EmojiPickerReact .epr-category-nav button.epr-active {
     background-color: var(--discord-accent) !important;
     color: white !important;
-}
-
-/* Ajustar el formulario de chat para incluir el emoji picker */
-.chat-input-form {
-    background: var(--discord-secondary);
-    border-top: 1px solid var(--discord-border);
-    padding: var(--spacing-lg) var(--spacing-xl);
-    display: flex;
-    gap: var(--spacing-md);
-    flex-shrink: 0;
-    align-items: center;
-}
-
-.chat-input {
-    flex: 1;
-    padding: var(--spacing-md) var(--spacing-lg);
-    border: 1px solid var(--discord-border);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--discord-input-bg);
-    color: var(--discord-text-primary);
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: all var(--transition-normal);
-    min-height: 40px;
 }

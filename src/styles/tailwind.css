@@ -1,0 +1,245 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables CSS para el tema Discord */
+:root {
+    /* Colores principales */
+    --discord-bg: #36393f;
+    --discord-secondary: #2f3136;
+    --discord-tertiary: #202225;
+
+    /* Colores de acento */
+    --discord-accent: #5865f2;
+    --discord-accent-hover: #4752c4;
+
+    /* Colores de estado */
+    --discord-success: #57f287;
+    --discord-warning: #faa61a;
+    --discord-danger: #ed4245;
+
+    /* Colores de texto */
+    --discord-text-primary: #ffffff;
+    --discord-text-secondary: #b9bbbe;
+    --discord-text-muted: #72767d;
+
+    /* Colores de bordes y elementos */
+    --discord-border: #40444b;
+    --discord-input-bg: #40444b;
+    --discord-card-bg: #2f3136;
+    --discord-hover: #40444b;
+
+    /* Sombras */
+    --discord-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --discord-shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --discord-shadow-focus: 0 0 0 2px rgba(88, 101, 242, 0.2);
+
+    /* Dimensiones */
+    --discord-sidebar-width: 240px;
+    --discord-userlist-width: 240px;
+
+    /* Espaciado */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 24px;
+    --spacing-3xl: 32px;
+
+    /* Bordes redondeados */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    /* Transiciones */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+
+    /* Z-index */
+    --z-dropdown: 1000;
+    --z-modal: 2000;
+    --z-tooltip: 3000;
+
+    /* Breakpoints para responsive design */
+    --mobile: 480px;
+    --tablet: 768px;
+    --desktop: 1024px;
+    --large-desktop: 1200px;
+
+    /* Dimensiones responsive */
+    --sidebar-width-mobile: 0px;
+    --sidebar-width-tablet: 200px;
+    --sidebar-width-desktop: 240px;
+
+    --userlist-width-mobile: 0px;
+    --userlist-width-tablet: 200px;
+    --userlist-width-desktop: 240px;
+
+    /* Espaciado responsive */
+    --padding-mobile: var(--spacing-md);
+    --padding-tablet: var(--spacing-lg);
+    --padding-desktop: var(--spacing-xl);
+
+    /* Tamaños de fuente responsive */
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 20px;
+    --font-size-3xl: 24px;
+
+    /* Alturas de componentes */
+    --header-height: 48px;
+    --input-height: 40px;
+    --button-height: 40px;
+    --card-height: 60px;
+
+    /* Fuentes */
+    --font-family-base: 'Whitney', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+    --font-family-emoji: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", "Arial", "sans-serif";
+}
+
+/* Importar estilos base existentes */
+@import './base/reset.css';
+
+/* Componentes personalizados de Tailwind */
+@layer components {
+
+    /* Botones */
+    .btn {
+        @apply bg-discord-accent text-white border-none px-3 py-2 rounded-sm text-sm font-semibold cursor-pointer transition-all duration-200 font-base min-h-[40px] inline-flex items-center justify-center;
+    }
+
+    .btn:hover {
+        @apply bg-discord-accent-hover -translate-y-px shadow-discord-hover;
+    }
+
+    .btn:active {
+        @apply translate-y-0;
+    }
+
+    .btn:disabled {
+        @apply opacity-60 cursor-not-allowed transform-none;
+    }
+
+    .btn-secondary {
+        @apply bg-discord-secondary text-discord-text-primary border border-discord-border;
+    }
+
+    .btn-secondary:hover {
+        @apply bg-discord-hover border-discord-accent;
+    }
+
+    .btn-ghost {
+        @apply bg-transparent text-discord-text-secondary border-none px-2;
+    }
+
+    .btn-ghost:hover {
+        @apply bg-discord-hover text-discord-text-primary transform-none;
+    }
+
+    .btn-sm {
+        @apply px-2 py-1 text-xs min-h-[32px];
+    }
+
+    .btn-lg {
+        @apply px-4 py-3 text-base min-h-[48px];
+    }
+
+    /* Inputs */
+    .input {
+        @apply px-3 py-2 border border-discord-border rounded-sm bg-discord-input-bg text-discord-text-primary text-sm font-base outline-none transition-all duration-200 min-h-[40px];
+    }
+
+    .input::placeholder {
+        @apply text-discord-text-muted;
+    }
+
+    .input:focus {
+        @apply border-discord-accent shadow-discord-focus;
+    }
+
+    .input.error {
+        @apply border-discord-danger;
+    }
+
+    .input-sm {
+        @apply px-2 py-1 text-xs min-h-[32px];
+    }
+
+    .input-lg {
+        @apply px-4 py-3 text-base min-h-[48px];
+    }
+
+    /* Cards */
+    .card {
+        @apply bg-discord-secondary border border-discord-border rounded-md p-4 shadow-discord transition-all duration-200;
+    }
+
+    .card:hover {
+        @apply bg-discord-hover border-discord-accent -translate-y-px shadow-discord-hover;
+    }
+
+    .card-header {
+        @apply border-b border-discord-border pb-3 mb-4;
+    }
+
+    .card-title {
+        @apply text-discord-text-primary m-0 text-base font-semibold;
+    }
+
+    /* Estados */
+    .status-dot {
+        @apply w-2 h-2 rounded-full inline-block;
+    }
+
+    .status-dot.connected {
+        @apply bg-discord-success;
+        box-shadow: 0 0 8px rgba(87, 242, 135, 0.4);
+    }
+
+    .status-dot.disconnected {
+        @apply bg-discord-danger;
+        box-shadow: 0 0 8px rgba(237, 66, 69, 0.4);
+    }
+
+    /* Scrollbars */
+    .scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #40444b transparent;
+    }
+
+    .scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 4px;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb {
+        background: #40444b;
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+        transition: background-color 0.2s;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #72767d;
+        background-clip: content-box;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        border-radius: 3px;
+        border: 1px solid transparent;
+    }
+}

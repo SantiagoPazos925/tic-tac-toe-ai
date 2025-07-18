@@ -60,7 +60,12 @@ export const AuthForm = () => {
     };
 
     return (
-        <motion.div className="auth-container" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }}>
+        <motion.div
+            className="auth-container"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+        >
             <h1>🎮 Lobby de Juegos</h1>
 
             <div className="auth-form-container">

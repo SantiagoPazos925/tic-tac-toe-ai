@@ -49,16 +49,18 @@
     gap: var(--spacing-lg);
 }
 
+/* Input de autenticación */
 .auth-input {
     padding: var(--spacing-md) var(--spacing-lg);
     border: 1px solid var(--discord-border);
     border-radius: var(--border-radius-sm);
     background-color: var(--discord-input-bg);
     color: var(--discord-text-primary);
-    font-size: 14px;
-    font-family: inherit;
+    font-size: var(--font-size-md);
+    font-family: var(--font-family-base);
     outline: none;
     transition: all var(--transition-normal);
+    min-height: var(--input-height);
 }
 
 .auth-input::placeholder {
@@ -67,31 +69,36 @@
 
 .auth-input:focus {
     border-color: var(--discord-accent);
-    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+    box-shadow: var(--discord-shadow-focus);
 }
 
 .auth-input.error {
     border-color: var(--discord-danger);
 }
 
-/* Auth Button */
+/* Botón de autenticación */
 .auth-button {
     background: var(--discord-accent);
     color: white;
     border: none;
     padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--border-radius-sm);
-    font-size: 14px;
+    font-size: var(--font-size-md);
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-normal);
-    font-family: inherit;
+    font-family: var(--font-family-base);
+    min-height: var(--button-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin-top: var(--spacing-sm);
 }
 
 .auth-button:hover {
     background: var(--discord-accent-hover);
     transform: translateY(-1px);
+    box-shadow: var(--discord-shadow-hover);
 }
 
 .auth-button:active {
@@ -174,11 +181,13 @@
     .auth-input {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: var(--font-size-sm);
+        min-height: 32px;
     }
 
     .auth-button {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: var(--font-size-sm);
+        min-height: 32px;
     }
 
     .auth-switch p {
