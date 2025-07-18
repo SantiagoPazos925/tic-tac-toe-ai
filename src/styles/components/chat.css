@@ -224,3 +224,165 @@
     background: var(--discord-text-muted);
     background-clip: content-box;
 }
+
+/* Estilos para el emoji picker */
+.emoji-picker-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.emoji-picker-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-normal);
+    color: var(--discord-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.emoji-picker-button:hover {
+    background: var(--discord-hover);
+    color: var(--discord-text-primary);
+}
+
+.emoji-picker-popup {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: var(--spacing-sm);
+    z-index: var(--z-dropdown);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: var(--discord-shadow);
+    border: 1px solid var(--discord-border);
+}
+
+/* Personalizar el emoji picker para que coincida con el tema */
+.emoji-picker-popup .EmojiPickerReact {
+    --epr-bg-color: var(--discord-secondary) !important;
+    --epr-category-label-bg-color: var(--discord-tertiary) !important;
+    --epr-category-label-text-color: var(--discord-text-primary) !important;
+    --epr-search-input-bg-color: var(--discord-input-bg) !important;
+    --epr-search-input-border-color: var(--discord-border) !important;
+    --epr-search-input-text-color: var(--discord-text-primary) !important;
+    --epr-search-input-placeholder-color: var(--discord-text-muted) !important;
+    --epr-emoji-size: 24px;
+    --epr-horizontal-padding: 12px;
+    --epr-picker-border-radius: var(--border-radius-md);
+    --epr-category-icon-size: 20px;
+    --epr-category-icon-padding: 8px;
+    --epr-category-icon-active-color: var(--discord-accent);
+    --epr-category-icon-color: var(--discord-text-secondary);
+    --epr-category-label-padding: 8px 12px;
+    --epr-category-label-font-size: 12px;
+    --epr-category-label-font-weight: 600;
+    --epr-category-label-text-transform: uppercase;
+    --epr-category-label-letter-spacing: 0.5px;
+    --epr-emoji-padding: 6px;
+    --epr-emoji-hover-bg-color: var(--discord-hover);
+    --epr-emoji-selected-bg-color: var(--discord-accent);
+    --epr-search-input-padding: 8px 12px;
+    --epr-search-input-border-radius: var(--border-radius-sm);
+    --epr-search-input-font-size: 14px;
+    --epr-search-input-border-width: 1px;
+    --epr-search-input-focus-border-color: var(--discord-accent);
+    --epr-search-input-focus-box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+}
+
+/* Forzar tema oscuro en el emoji picker */
+.emoji-picker-popup .EmojiPickerReact {
+    background-color: var(--discord-secondary) !important;
+    border: 1px solid var(--discord-border) !important;
+    border-radius: var(--border-radius-md) !important;
+    box-shadow: var(--discord-shadow) !important;
+}
+
+/* Estilos específicos para los emojis */
+.emoji-picker-popup .EmojiPickerReact .epr-emoji {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", Arial, sans-serif !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Mejorar la consistencia de los emojis en el input */
+.chat-input {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", Arial, sans-serif !important;
+}
+
+/* Mejorar la consistencia de los emojis en los mensajes */
+.message-content {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", Arial, sans-serif !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Estilos adicionales para el emoji picker */
+.emoji-picker-popup .EmojiPickerReact .epr-search {
+    background-color: var(--discord-input-bg) !important;
+    border: 1px solid var(--discord-border) !important;
+    border-radius: var(--border-radius-sm) !important;
+    color: var(--discord-text-primary) !important;
+}
+
+.emoji-picker-popup .EmojiPickerReact .epr-search:focus {
+    border-color: var(--discord-accent) !important;
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2) !important;
+}
+
+.emoji-picker-popup .EmojiPickerReact .epr-category-nav {
+    background-color: var(--discord-tertiary) !important;
+    border-bottom: 1px solid var(--discord-border) !important;
+}
+
+.emoji-picker-popup .EmojiPickerReact .epr-category-nav button {
+    color: var(--discord-text-secondary) !important;
+}
+
+.emoji-picker-popup .EmojiPickerReact .epr-category-nav button:hover {
+    background-color: var(--discord-hover) !important;
+    color: var(--discord-text-primary) !important;
+}
+
+.emoji-picker-popup .EmojiPickerReact .epr-category-nav button.epr-active {
+    background-color: var(--discord-accent) !important;
+    color: white !important;
+}
+
+/* Ajustar el formulario de chat para incluir el emoji picker */
+.chat-input-form {
+    background: var(--discord-secondary);
+    border-top: 1px solid var(--discord-border);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    display: flex;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.chat-input {
+    flex: 1;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--discord-border);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--discord-input-bg);
+    color: var(--discord-text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: all var(--transition-normal);
+    min-height: 40px;
+}

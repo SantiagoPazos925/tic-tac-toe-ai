@@ -1,6 +1,8 @@
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { ChatMessage } from '../types';
 import { formatTime } from '../utils/formatters';
+import { EmojiPickerComponent } from './EmojiPicker';
 
 interface ChatSectionProps {
     messages: ChatMessage[];
@@ -17,6 +19,7 @@ export const ChatSection = ({
     handleSendMessage,
     chatEndRef
 }: ChatSectionProps) => {
+    const inputRef = useRef<HTMLInputElement>(null);
     const userMessages = messages.filter(message => message.type === 'user');
 
     return (
@@ -55,12 +58,17 @@ export const ChatSection = ({
 
             <form onSubmit={handleSendMessage} className="chat-input-form">
                 <input
+                    ref={inputRef}
                     type="text"
                     placeholder="Escribe un mensaje..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     required
                     className="chat-input"
+                />
+                <EmojiPickerComponent
+                    onEmojiSelect={(emoji) => setNewMessage(newMessage + emoji)}
+                    inputRef={inputRef}
                 />
                 <motion.button
                     type="submit"
