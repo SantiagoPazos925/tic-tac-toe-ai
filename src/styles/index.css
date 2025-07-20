@@ -9,6 +9,7 @@
 @import './components/context-menu.css';
 @import './components/virtualized-list.css';
 @import './components/virtualization-demo.css';
+@import './components/image-optimization.css';
 
 /* Utilidades */
 @import './utilities/animations.css';

@@ -23,12 +23,19 @@
   },
   "dependencies": {
     "emoji-picker-react": "^4.13.2",
+    "imagemin-avif": "^0.1.6",
+    "imagemin-gifsicle": "^7.0.0",
+    "imagemin-mozjpeg": "^10.0.0",
+    "imagemin-pngquant": "^10.0.0",
+    "imagemin-svgo": "^11.0.1",
+    "imagemin-webp": "^8.0.0",
     "motion": "^12.23.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-window": "^1.8.11",
     "react-window-infinite-loader": "^1.0.10",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "vite-plugin-imagemin": "^0.6.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",

@@ -1,9 +1,40 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import { defineConfig } from 'vite';
+import ViteImageOptimizer from 'vite-plugin-imagemin';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    ViteImageOptimizer({
+      gifsicle: {
+        optimizationLevel: 7,
+        interlaced: false
+      },
+      mozjpeg: {
+        quality: 80,
+        progressive: true
+      },
+      pngquant: {
+        quality: [0.65, 0.8],
+        speed: 4
+      },
+      svgo: {
+        plugins: [
+          {
+            name: 'preset-default',
+            params: {
+              overrides: {
+                removeViewBox: false,
+                removeTitle: false,
+                removeDesc: false
+              }
+            }
+          }
+        ]
+      }
+    })
+  ],
   root: '.',
   css: {
     postcss: './postcss.config.js',

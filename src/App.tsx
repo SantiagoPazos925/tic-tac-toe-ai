@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { AuthForm } from './components/AuthForm'
 import { ChatSection } from './components/ChatSection'
 import { CriticalResourcePreloader } from './components/CriticalResourcePreloader'
+import { ImageOptimizationDemo } from './components/ImageOptimizationDemo'
 import { LobbyHeader } from './components/LobbyHeader'
 import { MobileNavigation } from './components/MobileNavigation'
 import { OfflineIndicator } from './components/OfflineIndicator'
@@ -49,6 +50,7 @@ function App() {
   const [showUsers, setShowUsers] = useState(false);
   const [showChannels, setShowChannels] = useState(false);
   const [showVirtualizationDemo, setShowVirtualizationDemo] = useState(false);
+  const [showImageOptimizationDemo, setShowImageOptimizationDemo] = useState(false);
   
   const {
     isConnected,
@@ -153,6 +155,21 @@ function App() {
       {/* Demo de Virtualización */}
       {showVirtualizationDemo && (
         <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
+      )}
+
+      {/* Botón para mostrar/ocultar demo de optimización de imágenes */}
+      <div className="demo-toggle-container">
+        <button
+          className="demo-toggle-button"
+          onClick={() => setShowImageOptimizationDemo(!showImageOptimizationDemo)}
+        >
+          {showImageOptimizationDemo ? '🔽 Ocultar Demo Optimización Imágenes' : '🖼️ Mostrar Demo Optimización Imágenes'}
+        </button>
+      </div>
+
+      {/* Demo de Optimización de Imágenes */}
+      {showImageOptimizationDemo && (
+        <ImageOptimizationDemo />
       )}
 
       <div className="lobby-container">
