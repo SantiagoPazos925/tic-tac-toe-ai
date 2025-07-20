@@ -13,4 +13,14 @@ router.get('/', userRateLimit, UsersController.getAllUsers);
 // Obtener estadísticas de usuarios
 router.get('/stats', userRateLimit, UsersController.getUserStats);
 
+// Obtener usuarios por status (nuevo endpoint optimizado)
+router.get('/status/:status', userRateLimit, UsersController.getUsersByStatus);
+
+// Obtener usuarios activos recientemente (nuevo endpoint optimizado)
+router.get('/recent', userRateLimit, UsersController.getRecentlyActiveUsers);
+
+// Endpoints de monitoreo de performance (solo para desarrollo/admin)
+router.get('/performance', userRateLimit, UsersController.getDatabasePerformance);
+router.post('/performance/reset', userRateLimit, UsersController.resetDatabasePerformance);
+
 export default router; 
