@@ -1,309 +1,218 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAuthContext } from '../contexts/AuthContext';
-import { socketService } from '../services/socketService';
-import { ChatMessage, User } from '../types';
-import Logger from '../utils/logger';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 
-export const useSocket = () => {
-    const [isConnected, setIsConnected] = useState(false);
-    const [ping, setPing] = useState<number | null>(null);
-    const [users, setUsers] = useState<User[]>([]);
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-    const [hasJoinedLobby, setHasJoinedLobby] = useState(false);
-    const [isJoiningLobby, setIsJoiningLobby] = useState(false);
-    const { logout, setForceDisconnected, authUser } = useAuthContext();
+interface UseSocketOptions {
+  url?: string;
+  autoConnect?: boolean;
+  lazyConnect?: boolean;
+  retryAttempts?: number;
+  retryDelay?: number;
+  timeout?: number;
+}
 
-    // Memoizar usuarios únicos para evitar re-renders innecesarios
-    const uniqueUsers = useMemo(() => {
-        return users.filter((user, index, self) =>
-            index === self.findIndex(u => u.id === user.id)
-        );
-    }, [users]);
+interface UseSocketReturn {
+  socket: Socket | null;
+  isConnected: boolean;
+  isConnecting: boolean;
+  error: string | null;
+  connect: () => void;
+  disconnect: () => void;
+  reconnect: () => void;
+}
 
-    // Memoizar mensajes filtrados
-    const userMessages = useMemo(() =>
-        chatMessages.filter(message => message.type === 'text' || message.type === 'user'),
-        [chatMessages]
-    );
+export const useSocket = (options: UseSocketOptions = {}): UseSocketReturn => {
+  const {
+    url = import.meta.env['VITE_SOCKET_URL'] || 'https://tic-tac-toe-ai-production-13d0.up.railway.app',
+    autoConnect = false,
+    lazyConnect = true,
+    retryAttempts = 3,
+    retryDelay = 1000,
+    timeout = 5000
+  } = options;
 
-    const systemMessages = useMemo(() =>
-        chatMessages.filter(message => message.type === 'system'),
-        [chatMessages]
-    );
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Conectar
-    const connect = useCallback(() => {
-        const existingSocket = socketService.getSocket();
-        if (existingSocket && existingSocket.connected) {
-            Logger.socket('Socket ya conectado, no creando nueva conexión');
-            return existingSocket;
-        }
+  // Función para crear la conexión con optimizaciones
+  const createSocket = useCallback(() => {
+    if (socketRef.current) {
+      return socketRef.current;
+    }
 
-        Logger.socket('Creando nueva conexión de socket');
-        const socket = socketService.connect();
+        const socket = io(url, {
+      autoConnect: false,
+      timeout: timeout,
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      rememberUpgrade: true,
+      forceNew: false,
+      // Configuración de reconnection
+      reconnection: true,
+      reconnectionAttempts: retryAttempts,
+      reconnectionDelay: retryDelay,
+      reconnectionDelayMax: 5000,
+              // Configuración básica
+    });
 
-        // Eventos de conexión
-        socketService.onConnect(() => {
-            Logger.socket('Evento connect recibido en useSocket');
-            setIsConnected(true);
-            // NO unirse al lobby aquí - se maneja en el useEffect
-        });
+    // Event listeners optimizados
+    socket.on('connect', () => {
+      console.log('🔌 Socket conectado');
+      setIsConnected(true);
+      setIsConnecting(false);
+      setError(null);
+      retryCountRef.current = 0;
+    });
 
-        socketService.onDisconnect(() => {
-            Logger.socket('Evento disconnect recibido en useSocket');
-            setIsConnected(false);
-            setPing(null);
-            setHasJoinedLobby(false);
-            setIsJoiningLobby(false);
-        });
+    socket.on('disconnect', (reason) => {
+      console.log('🔌 Socket desconectado:', reason);
+      setIsConnected(false);
+      setIsConnecting(false);
+      
+      if (reason === 'io server disconnect') {
+        // El servidor desconectó, intentar reconectar
+        setTimeout(() => {
+          socket.connect();
+        }, retryDelay);
+      }
+    });
 
-        // Eventos de usuarios
-        socketService.onUsersList((usersList: any[]) => {
-            Logger.socket('Lista de usuarios recibida:', usersList);
-            // Mapear LobbyUser del backend a User del frontend
-            const mappedUsers: User[] = usersList.map(user => {
-                // Convertir fechas de string a Date si es necesario
-                const joinDate = user.joinedAt ? 
-                    (typeof user.joinedAt === 'string' ? new Date(user.joinedAt) : user.joinedAt) : 
-                    new Date();
-                
-                const lastSeen = user.lastSeen ? 
-                    (typeof user.lastSeen === 'string' ? new Date(user.lastSeen) : user.lastSeen) : 
-                    new Date();
-
-                return {
-                    id: user.id,
-                    username: user.name, // LobbyUser usa 'name', User usa 'username'
-                    email: '', // No disponible en LobbyUser
-                    status: user.status,
-                    lastSeen: lastSeen,
-                    isOnline: user.status === 'online',
-                    joinDate: joinDate, // LobbyUser usa 'joinedAt', User usa 'joinDate'
-                    name: user.name // Para compatibilidad
-                };
-            });
-            setUsers(mappedUsers);
-        });
-
-        socketService.onUserJoined((user: any) => {
-            Logger.socket('Usuario unido:', user);
-            
-            // Convertir fechas de string a Date si es necesario
-            const joinDate = user.joinedAt ? 
-                (typeof user.joinedAt === 'string' ? new Date(user.joinedAt) : user.joinedAt) : 
-                new Date();
-            
-            const lastSeen = user.lastSeen ? 
-                (typeof user.lastSeen === 'string' ? new Date(user.lastSeen) : user.lastSeen) : 
-                new Date();
-
-            const mappedUser: User = {
-                id: user.id,
-                username: user.name,
-                email: '',
-                status: user.status,
-                lastSeen: lastSeen,
-                isOnline: user.status === 'online',
-                joinDate: joinDate,
-                name: user.name
-            };
-            
-            setUsers(prev => {
-                const userExists = prev.some(u => u.id === mappedUser.id);
-                if (userExists) {
-                    Logger.socket('Usuario ya existe en la lista');
-                    return prev;
-                }
-                Logger.socket('Agregando usuario a la lista');
-                return [...prev, mappedUser];
-            });
-        });
-
-        socketService.onUserLeft((user: { id: string; name: string }) => {
-            Logger.socket('Usuario salió:', user);
-            setUsers(prev => prev.filter(u => u.id !== user.id));
-        });
-
-        socketService.onUserUpdated((updatedUser: any) => {
-            Logger.socket('Usuario actualizado recibido:', updatedUser);
-            setUsers(prev => {
-                const updatedUsers = prev.map(u => {
-                    if (u.id === updatedUser.id) {
-                        Logger.socket('Actualizando usuario:', u.username, 'de', u.status, 'a', updatedUser.status);
-                        
-                        // Convertir lastSeen de string a Date si es necesario
-                        const lastSeen = updatedUser.lastSeen ? 
-                            (typeof updatedUser.lastSeen === 'string' ? new Date(updatedUser.lastSeen) : updatedUser.lastSeen) : 
-                            new Date();
-                        
-                        // Mapear correctamente el usuario actualizado
-                        return {
-                            ...u, // Mantener datos existentes como joinDate
-                            status: updatedUser.status,
-                            lastSeen: lastSeen,
-                            isOnline: updatedUser.status === 'online'
-                        };
-                    }
-                    return u;
-                });
-                return updatedUsers;
-            });
-        });
-
-        // Eventos del chat
-        socketService.onChatHistory((messages: ChatMessage[]) => {
-            Logger.socket('Historial de chat recibido:', messages.length, 'mensajes');
-            setChatMessages(messages);
-        });
-
-        socketService.onChatMessage((message: ChatMessage) => {
-            Logger.socket('Mensaje de chat recibido:', message);
-            setChatMessages(prev => [...prev, message]);
-        });
-
-        // Eventos de ping
-        socketService.onPong((timestamp: number) => {
-            const pingTime = Date.now() - timestamp;
-            setPing(pingTime);
-        });
-
-        // Evento de desconexión forzada
-        socketService.onForceDisconnect((data: { message: string; reason: string }) => {
-            Logger.socket('Recibido evento force-disconnect:', data);
-            setIsConnected(false);
-            setPing(null);
-            setUsers([]);
-            setChatMessages([]);
-
-            // Marcar como force-disconnected para evitar reconexión inmediata
-            setForceDisconnected();
-
-            // Mostrar notificación al usuario y cerrar sesión
-            if (data.reason === 'new-login') {
-                Logger.socket('Mostrando alerta de desconexión por nuevo login');
-                alert('Has sido desconectado porque te conectaste desde otro dispositivo.');
-            } else {
-                Logger.socket('Mostrando alerta de desconexión general');
-                alert(data.message);
-            }
-
-            // Cerrar sesión y redirigir al login
-            Logger.socket('Ejecutando logout después de force-disconnect');
-            logout();
-
-            // Deshabilitar temporalmente el formulario de login para evitar reconexión inmediata
-            setTimeout(() => {
-                const authForm = document.querySelector('.auth-form') as HTMLFormElement;
-                if (authForm) {
-                    authForm.style.pointerEvents = 'none';
-                    authForm.style.opacity = '0.5';
-
-                    // Rehabilitar después de 3 segundos
-                    setTimeout(() => {
-                        authForm.style.pointerEvents = 'auto';
-                        authForm.style.opacity = '1';
-                    }, 3000);
-                }
-            }, 100);
-        });
-
-        // Eventos de error
-        socketService.onError((error: { message: string }) => {
-            Logger.error('Error de socket:', error.message);
-            alert(`Error de conexión: ${error.message}`);
-        });
-
-        return socket;
-    }, [logout, setForceDisconnected, authUser]);
-
-    // Desconectar
-    const disconnect = useCallback(() => {
-        socketService.disconnect();
-        setIsConnected(false);
-        setPing(null);
-        setUsers([]);
-        setChatMessages([]);
-        setHasJoinedLobby(false);
-        setIsJoiningLobby(false);
-    }, []);
-
-    // Enviar ping
-    const sendPing = useCallback(() => {
-        socketService.sendPing();
-    }, []);
-
-    // Verificar estado de conexión cuando cambie el socket
-    useEffect(() => {
-        const checkConnectionStatus = () => {
-            const socket = socketService.getSocket();
-            if (socket && socket.connected && !isConnected) {
-                Logger.socket('Actualizando estado de conexión a conectado');
-                setIsConnected(true);
-            } else if ((!socket || !socket.connected) && isConnected) {
-                Logger.socket('Actualizando estado de conexión a desconectado');
-                setIsConnected(false);
-            }
-        };
-
-        // Verificar inmediatamente
-        checkConnectionStatus();
-
-        // Verificar periódicamente
-        const interval = setInterval(checkConnectionStatus, 1000);
-
-        return () => clearInterval(interval);
-    }, [isConnected]);
-
-    // Unirse al lobby cuando cambie el usuario autenticado y esté conectado
-    useEffect(() => {
-        let timeoutId: NodeJS.Timeout | null = null;
+    socket.on('connect_error', (err) => {
+      console.error('❌ Error de conexión Socket:', err);
+      setIsConnecting(false);
+      setError(err.message);
+      
+      // Retry con backoff exponencial
+      if (retryCountRef.current < retryAttempts) {
+        retryCountRef.current++;
+        const delay = retryDelay * Math.pow(2, retryCountRef.current - 1);
         
-        if (authUser && isConnected && !hasJoinedLobby && !isJoiningLobby) {
-            Logger.socket('Usuario autenticado cambiado y conectado, uniéndose al lobby:', authUser.username);
-            setHasJoinedLobby(true);
-            setIsJoiningLobby(true);
-            
-            // Debounce para evitar múltiples uniones
-            timeoutId = setTimeout(() => {
-                socketService.joinLobby(authUser.username);
-                // Resetear el flag después de un tiempo
-                setTimeout(() => setIsJoiningLobby(false), 1000);
-            }, 500); // Aumentar el delay para evitar uniones rápidas
-        }
+        retryTimeoutRef.current = setTimeout(() => {
+          console.log(`🔄 Reintentando conexión Socket (${retryCountRef.current}/${retryAttempts})`);
+          socket.connect();
+        }, delay);
+      }
+    });
 
-        return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-        };
-    }, [authUser, isConnected, hasJoinedLobby, isJoiningLobby]);
+    socket.on('reconnect', (attemptNumber) => {
+      console.log(`🔄 Socket reconectado después de ${attemptNumber} intentos`);
+      setIsConnected(true);
+      setIsConnecting(false);
+      setError(null);
+    });
 
-    // Limpiar al desmontar
-    useEffect(() => {
-        // Verificar si ya hay una conexión activa al inicializar
-        const existingSocket = socketService.getSocket();
-        if (existingSocket && existingSocket.connected) {
-            Logger.socket('Socket ya conectado al inicializar useSocket');
-            setIsConnected(true);
-        }
+    socket.on('reconnect_error', (err) => {
+      console.error('❌ Error de reconexión Socket:', err);
+      setError(err.message);
+    });
 
-        connect();
+    socketRef.current = socket;
+    return socket;
+  }, [url, timeout, retryAttempts, retryDelay]);
 
-        return () => {
-            socketService.offAll();
-            disconnect();
-        };
-    }, [connect, disconnect]);
+  // Función para conectar
+  const connect = useCallback(() => {
+    if (isConnected || isConnecting) return;
 
-    return {
-        isConnected,
-        ping,
-        users: uniqueUsers, // Retornar usuarios únicos memoizados
-        chatMessages,
-        userMessages, // Mensajes de usuario memoizados
-        systemMessages, // Mensajes del sistema memoizados
-        socketService,
-        sendPing,
-        disconnect
+    setIsConnecting(true);
+    setError(null);
+    
+    const socket = createSocket();
+    socket.connect();
+  }, [isConnected, isConnecting, createSocket]);
+
+  // Función para desconectar
+  const disconnect = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+    setIsConnected(false);
+    setIsConnecting(false);
+    setError(null);
+  }, []);
+
+  // Función para reconectar
+  const reconnect = useCallback(() => {
+    disconnect();
+    retryCountRef.current = 0;
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+    setTimeout(connect, 100);
+  }, [disconnect, connect]);
+
+  // Lazy connection - conectar solo cuando sea necesario
+  useEffect(() => {
+    if (!lazyConnect && autoConnect) {
+      connect();
+    }
+
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
+  }, [lazyConnect, autoConnect, connect]);
+
+  // Cleanup al desmontar
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  return {
+    socket: socketRef.current,
+    isConnected,
+    isConnecting,
+    error,
+    connect,
+    disconnect,
+    reconnect
+  };
+};
+
+// Hook para optimizar la carga de Socket.io
+export const useSocketOptimization = () => {
+  const [isSocketLoaded, setIsSocketLoaded] = useState(false);
+
+  useEffect(() => {
+    // Precargar Socket.io cuando el navegador esté idle
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        // Precargar el script de Socket.io
+        const script = document.createElement('script');
+        script.src = 'https://cdn.socket.io/4.8.1/socket.io.min.js';
+        script.async = true;
+        script.onload = () => {
+          console.log('📦 Socket.io precargado');
+          setIsSocketLoaded(true);
+        };
+        document.head.appendChild(script);
+      });
+    } else {
+      // Fallback para navegadores que no soportan requestIdleCallback
+      setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.socket.io/4.8.1/socket.io.min.js';
+        script.async = true;
+        script.onload = () => {
+          console.log('📦 Socket.io precargado');
+          setIsSocketLoaded(true);
+        };
+        document.head.appendChild(script);
+      }, 2000);
+    }
+  }, []);
+
+  return isSocketLoaded;
 }; 

@@ -7,6 +7,7 @@ import { ImageOptimizationDemo } from './components/ImageOptimizationDemo'
 import { LobbyHeader } from './components/LobbyHeader'
 import { MobileNavigation } from './components/MobileNavigation'
 import { OfflineIndicator } from './components/OfflineIndicator'
+import { SocketOptimizer, SocketStatusIndicator } from './components/SocketOptimizer'
 import { SystemMessages } from './components/SystemMessages'
 import { UserProfile } from './components/UserProfile'
 import { UsersList } from './components/UsersList'
@@ -124,134 +125,142 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <AuthForm />
-      </motion.div>
+      <SocketOptimizer>
+        <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <AuthForm />
+          <SocketStatusIndicator />
+        </motion.div>
+      </SocketOptimizer>
     );
   }
 
   return (
-    <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      {/* Preload de recursos críticos */}
-      <CriticalResourcePreloader />
-      
-      {/* Indicadores de estado offline y actualizaciones */}
-      <OfflineIndicator />
+    <SocketOptimizer>
+      <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* Preload de recursos críticos */}
+        <CriticalResourcePreloader />
+        
+        {/* Indicadores de estado offline y actualizaciones */}
+        <OfflineIndicator />
 
-      <LobbyHeader
-        isConnected={isConnected}
-        ping={ping}
-      />
+        <LobbyHeader
+          isConnected={isConnected}
+          ping={ping}
+        />
 
-      {showDemo && (
-        <>  
-          {/* Botón para mostrar/ocultar demo de virtualización */}
-          <div className="demo-toggle-container">
-            <button
-              className="demo-toggle-button"
-              onClick={() => setShowVirtualizationDemo(!showVirtualizationDemo)}
-            >
-              {showVirtualizationDemo ? '🔽 Ocultar Demo Virtualización' : '🚀 Mostrar Demo Virtualización'}
-            </button>
-          </div>
+        {showDemo && (
+          <>  
+            {/* Botón para mostrar/ocultar demo de virtualización */}
+            <div className="demo-toggle-container">
+              <button
+                className="demo-toggle-button"
+                onClick={() => setShowVirtualizationDemo(!showVirtualizationDemo)}
+              >
+                {showVirtualizationDemo ? '🔽 Ocultar Demo Virtualización' : '🚀 Mostrar Demo Virtualización'}
+              </button>
+            </div>
 
-          {/* Demo de Virtualización */}
-          {showVirtualizationDemo && (
-            <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
-          )}
+            {/* Demo de Virtualización */}
+            {showVirtualizationDemo && (
+              <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
+            )}
 
-          {/* Botón para mostrar/ocultar demo de optimización de imágenes */}
-          <div className="demo-toggle-container">
-            <button
-              className="demo-toggle-button"
-              onClick={() => setShowImageOptimizationDemo(!showImageOptimizationDemo)}
-            >
-              {showImageOptimizationDemo ? '🔽 Ocultar Demo Optimización Imágenes' : '🖼️ Mostrar Demo Optimización Imágenes'}
-            </button>
-          </div>
+            {/* Botón para mostrar/ocultar demo de optimización de imágenes */}
+            <div className="demo-toggle-container">
+              <button
+                className="demo-toggle-button"
+                onClick={() => setShowImageOptimizationDemo(!showImageOptimizationDemo)}
+              >
+                {showImageOptimizationDemo ? '🔽 Ocultar Demo Optimización Imágenes' : '🖼️ Mostrar Demo Optimización Imágenes'}
+              </button>
+            </div>
 
-          {/* Demo de Optimización de Imágenes */}
-          {showImageOptimizationDemo && (
-            <ImageOptimizationDemo />
-          )}
-      </>
-     
-      ) }
-      <div className="lobby-container">
-        {/* Left Sidebar - Canales */}
-        <div className={`left-sidebar ${isMobile && showChannels ? 'show-mobile' : ''}`}>
-          <span>Canales próximamente...</span>
-        </div>
-
-        {/* Main Content - Chat */}
-        <div className="main-content">
-          <SystemMessages
-            messages={systemMessages}
-            systemMessagesEndRef={systemMessagesEndRef}
-          />
-
-          <ChatSection
-            messages={userMessages}
-            chatEndRef={chatEndRef}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={sendMessage}
-          />
-        </div>
-
-        {/* Right Sidebar - Users List + Profile */}
-        <div className={`right-sidebar ${isMobile && showUsers ? 'show-mobile' : ''}`}>
-          <UsersList
-            users={users}
-            onUserContextMenu={handleUserContextMenu}
-          />
-
-          <UserProfile
-            authUser={authUser}
-            currentUser={currentUser}
-            showStatusMenu={showStatusMenu}
-            toggleStatusMenu={toggleStatusMenu}
-            onStatusChange={handleStatusChange}
-            onLogout={handleLogout}
-          />
-        </div>
-      </div>
-
-      {/* Navegación móvil - solo se renderiza en móviles */}
-      {isMobile && (
-        <>
-          <MobileNavigation
-            onToggleUsers={toggleUsers}
-            onToggleChannels={toggleChannels}
-            showUsers={showUsers}
-            showChannels={showChannels}
-          />
-
-          {/* Overlay para cerrar sidebars en móvil */}
-          {(showUsers || showChannels) && (
-            <div
-              className="sidebar-overlay show"
-              onClick={() => {
-                setShowUsers(false);
-                setShowChannels(false);
-              }}
-            />
-          )}
+            {/* Demo de Optimización de Imágenes */}
+            {showImageOptimizationDemo && (
+              <ImageOptimizationDemo />
+            )}
         </>
-      )}
+       
+        ) }
+        <div className="lobby-container">
+          {/* Left Sidebar - Canales */}
+          <div className={`left-sidebar ${isMobile && showChannels ? 'show-mobile' : ''}`}>
+            <span>Canales próximamente...</span>
+          </div>
 
-      {/* User Context Menu */}
-      {showUserContextMenu && contextMenuUser && (
-        <Suspense fallback={<LazyLoader />}>
-          <UserContextMenu
-            contextMenuUser={contextMenuUser}
-            contextMenuPosition={contextMenuPosition}
-            onUserAction={handleUserAction}
-            onClose={closeUserContextMenu}
-          />
-        </Suspense>
-      )}
-    </motion.div>
+          {/* Main Content - Chat */}
+          <div className="main-content">
+            <SystemMessages
+              messages={systemMessages}
+              systemMessagesEndRef={systemMessagesEndRef}
+            />
+
+            <ChatSection
+              messages={userMessages}
+              chatEndRef={chatEndRef}
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              handleSendMessage={sendMessage}
+            />
+          </div>
+
+          {/* Right Sidebar - Users List + Profile */}
+          <div className={`right-sidebar ${isMobile && showUsers ? 'show-mobile' : ''}`}>
+            <UsersList
+              users={users}
+              onUserContextMenu={handleUserContextMenu}
+            />
+
+            <UserProfile
+              authUser={authUser}
+              currentUser={currentUser}
+              showStatusMenu={showStatusMenu}
+              toggleStatusMenu={toggleStatusMenu}
+              onStatusChange={handleStatusChange}
+              onLogout={handleLogout}
+            />
+          </div>
+        </div>
+
+        {/* Navegación móvil - solo se renderiza en móviles */}
+        {isMobile && (
+          <>
+            <MobileNavigation
+              onToggleUsers={toggleUsers}
+              onToggleChannels={toggleChannels}
+              showUsers={showUsers}
+              showChannels={showChannels}
+            />
+
+            {/* Overlay para cerrar sidebars en móvil */}
+            {(showUsers || showChannels) && (
+              <div
+                className="sidebar-overlay show"
+                onClick={() => {
+                  setShowUsers(false);
+                  setShowChannels(false);
+                }}
+              />
+            )}
+          </>
+        )}
+
+        {/* User Context Menu */}
+        {showUserContextMenu && contextMenuUser && (
+          <Suspense fallback={<LazyLoader />}>
+            <UserContextMenu
+              contextMenuUser={contextMenuUser}
+              contextMenuPosition={contextMenuPosition}
+              onUserAction={handleUserAction}
+              onClose={closeUserContextMenu}
+            />
+          </Suspense>
+        )}
+
+        {/* Indicador de estado de Socket */}
+        <SocketStatusIndicator />
+      </motion.div>
+    </SocketOptimizer>
   );
 }
 
