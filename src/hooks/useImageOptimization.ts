@@ -1,116 +1,154 @@
 import { useCallback, useEffect, useState } from 'react';
 
 interface ImageOptimizationOptions {
-  quality?: number;
-  format?: 'webp' | 'avif' | 'jpeg' | 'png';
+  src: string;
+  alt: string;
   width?: number;
   height?: number;
-  blur?: number;
+  quality?: number;
+  format?: 'webp' | 'avif' | 'auto';
+  lazy?: boolean;
+  placeholder?: string;
 }
 
-interface UseImageOptimizationReturn {
-  optimizedSrc: string;
-  isLoading: boolean;
-  hasError: boolean;
-  loadImage: () => void;
-  preloadImage: () => void;
+interface OptimizedImage {
+  src: string;
+  srcSet: string;
+  sizes: string;
+  alt: string;
+  loading: 'lazy' | 'eager';
+  placeholder?: string | undefined;
 }
 
-export const useImageOptimization = (
-  originalSrc: string,
-  options: ImageOptimizationOptions = {}
-): UseImageOptimizationReturn => {
-  const [optimizedSrc, setOptimizedSrc] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
-
+export const useImageOptimization = (options: ImageOptimizationOptions): OptimizedImage => {
   const {
-    quality = 80,
-    format = 'webp',
+    src,
+    alt,
     width,
-    height,
-    blur = 0
+    quality = 80,
+    format = 'auto',
+    lazy = true,
+    placeholder
   } = options;
 
-  // Función para generar URL optimizada
-  const generateOptimizedUrl = useCallback((src: string): string => {
-    // Si es un SVG o data URL, no optimizar
-    if (src.endsWith('.svg') || src.startsWith('data:')) {
-      return src;
-    }
+  const [optimizedSrc, setOptimizedSrc] = useState<string>(src);
+  const [srcSet, setSrcSet] = useState<string>('');
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-    // Para imágenes externas, usar un servicio de optimización
-    if (src.startsWith('http')) {
-      // Aquí podrías integrar con servicios como Cloudinary, ImageKit, etc.
-      return src;
-    }
+  // Detectar soporte de formatos modernos
+  const detectFormatSupport = useCallback(() => {
+    if (typeof window === 'undefined') return 'webp';
 
-    // Para imágenes locales, generar URL con parámetros
-    const url = new URL(src, window.location.origin);
-    url.searchParams.set('format', format);
-    url.searchParams.set('quality', quality.toString());
-    
-    if (width) url.searchParams.set('w', width.toString());
-    if (height) url.searchParams.set('h', height.toString());
-    if (blur > 0) url.searchParams.set('blur', blur.toString());
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
 
-    return url.toString();
-  }, [format, quality, width, height, blur]);
-
-  // Función para cargar imagen
-  const loadImage = useCallback(() => {
-    if (!originalSrc) return;
-
-    setIsLoading(true);
-    setHasError(false);
-
-    const img = new Image();
-    const optimizedUrl = generateOptimizedUrl(originalSrc);
-
-    img.onload = () => {
-      setOptimizedSrc(optimizedUrl);
-      setIsLoading(false);
-    };
-
-    img.onerror = () => {
-      // Fallback al original si la optimización falla
-      setOptimizedSrc(originalSrc);
-      setIsLoading(false);
-      setHasError(true);
-    };
-
-    img.src = optimizedUrl;
-  }, [originalSrc, generateOptimizedUrl]);
-
-  // Función para precargar imagen
-  const preloadImage = useCallback(() => {
-    if (!originalSrc) return;
-
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = generateOptimizedUrl(originalSrc);
-    document.head.appendChild(link);
-
-    // Limpiar después de un tiempo
-    setTimeout(() => {
-      if (link.parentNode) {
-        link.parentNode.removeChild(link);
+    // Probar AVIF
+    try {
+      canvas.toDataURL('image/avif');
+      return 'avif';
+    } catch {
+      // Probar WebP
+      try {
+        canvas.toDataURL('image/webp');
+        return 'webp';
+      } catch {
+        return 'jpeg';
       }
-    }, 5000);
-  }, [originalSrc, generateOptimizedUrl]);
+    }
+  }, []);
 
-  // Cargar imagen automáticamente
+  // Generar srcSet optimizado
+  const generateSrcSet = useCallback((originalSrc: string, format: string) => {
+    const supportedFormat = detectFormatSupport();
+    const finalFormat = format === 'auto' ? supportedFormat : format;
+    
+    const sizes = [320, 640, 960, 1280, 1920];
+    const srcSetParts = sizes.map(size => {
+      const optimizedSrc = `${originalSrc}?w=${size}&q=${quality}&fmt=${finalFormat}`;
+      return `${optimizedSrc} ${size}w`;
+    });
+
+    return srcSetParts.join(', ');
+  }, [quality, detectFormatSupport]);
+
+  // Generar sizes attribute
+  const generateSizes = useCallback((imgWidth?: number) => {
+    if (!imgWidth) return '100vw';
+    
+    if (imgWidth <= 320) return '320px';
+    if (imgWidth <= 640) return '640px';
+    if (imgWidth <= 960) return '960px';
+    if (imgWidth <= 1280) return '1280px';
+    return '1920px';
+  }, []);
+
+  // Optimizar imagen
   useEffect(() => {
-    loadImage();
-  }, [loadImage]);
+    const optimizeImage = async () => {
+      try {
+        // Si es una imagen externa, usar un servicio de optimización
+        if (src.startsWith('http')) {
+          // Usar un servicio como Cloudinary, ImageKit, o similar
+          const optimizedUrl = `https://res.cloudinary.com/demo/image/fetch/w_${width || 'auto'},q_${quality},f_auto/${src}`;
+          setOptimizedSrc(optimizedUrl);
+        } else {
+          // Para imágenes locales, usar Vite's asset handling
+          setOptimizedSrc(src);
+        }
+
+        const newSrcSet = generateSrcSet(src, format);
+        setSrcSet(newSrcSet);
+      } catch (error) {
+        console.error('Error optimizing image:', error);
+        setOptimizedSrc(src);
+      }
+    };
+
+    optimizeImage();
+  }, [src, width, quality, format, generateSrcSet]);
+
+  // Lazy loading con Intersection Observer
+  useEffect(() => {
+    if (!lazy) {
+      setIsLoaded(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsLoaded(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      }
+    );
+
+    const imgElement = document.querySelector(`img[src="${src}"]`);
+    if (imgElement) {
+      observer.observe(imgElement);
+    }
+
+    return () => {
+      if (imgElement) {
+        observer.unobserve(imgElement);
+      }
+    };
+  }, [src, lazy]);
 
   return {
-    optimizedSrc,
-    isLoading,
-    hasError,
-    loadImage,
-    preloadImage
+    src: optimizedSrc,
+    srcSet,
+    sizes: generateSizes(width),
+    alt,
+    loading: lazy ? 'lazy' : 'eager',
+    placeholder: placeholder || (isLoaded ? undefined : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YWFhYSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvYWRpbmcuLi48L3RleHQ+PC9zdmc+')
   };
 };
 
@@ -144,4 +182,54 @@ export const useImageFormatSupport = () => {
   }, []);
 
   return supportedFormats;
+};
+
+// Hook para precarga de imágenes
+export const useImagePreload = (srcs: string[]) => {
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const preloadImages = async () => {
+      const promises = srcs.map(src => {
+        return new Promise<string>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(src);
+          img.onerror = () => reject(src);
+          img.src = src;
+        });
+      });
+
+      try {
+        const loadedSrcs = await Promise.all(promises);
+        setLoadedImages(new Set(loadedSrcs));
+      } catch (error) {
+        console.error('Error preloading images:', error);
+      }
+    };
+
+    preloadImages();
+  }, [srcs]);
+
+  return loadedImages;
+};
+
+// Hook para optimización de imágenes en background
+export const useBackgroundImageOptimization = () => {
+  const [isIdle, setIsIdle] = useState(false);
+
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      const handleIdle = () => {
+        setIsIdle(true);
+        // Aquí se pueden optimizar imágenes en background
+      };
+
+      requestIdleCallback(handleIdle);
+    } else {
+      // Fallback para navegadores que no soportan requestIdleCallback
+      setTimeout(() => setIsIdle(true), 1000);
+    }
+  }, []);
+
+  return isIdle;
 }; 

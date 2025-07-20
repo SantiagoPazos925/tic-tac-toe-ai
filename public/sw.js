@@ -1,156 +1,184 @@
-// Service Worker para Tic-Tac-Toe AI
-const CACHE_NAME = 'tic-tac-toe-v1.0.0';
-const STATIC_CACHE = 'static-v1.0.0';
-const DYNAMIC_CACHE = 'dynamic-v1.0.0';
+// Service Worker optimizado para Tic-Tac-Toe AI
+const CACHE_VERSION = 'v2.0.0';
+const STATIC_CACHE = `static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
-// Archivos estáticos para cache offline
-const STATIC_FILES = [
+// Archivos críticos para cache inmediato (First Paint)
+const CRITICAL_FILES = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/favicon.ico'
+    '/icon.svg'
 ];
 
-// Recursos críticos para cache inmediato
-const CRITICAL_RESOURCES = [
+// Recursos estáticos que cambian poco
+const STATIC_RESOURCES = [
     '/src/styles/index.css',
-    '/src/components/AuthForm.js',
-    '/src/components/LobbyHeader.js'
+    '/src/styles/base/reset.css',
+    '/src/styles/base/variables.css'
 ];
 
-// Estrategias de cache
-const CACHE_STRATEGIES = {
-    // Cache First: Para recursos estáticos que no cambian
-    CACHE_FIRST: 'cache-first',
-    // Network First: Para datos dinámicos que necesitan estar actualizados
-    NETWORK_FIRST: 'network-first',
-    // Stale While Revalidate: Para recursos que pueden estar desactualizados temporalmente
-    STALE_WHILE_REVALIDATE: 'stale-while-revalidate'
+// Tiempo máximo de cache para diferentes tipos de recursos
+const CACHE_DURATIONS = {
+    STATIC: 7 * 24 * 60 * 60 * 1000, // 7 días
+    DYNAMIC: 24 * 60 * 60 * 1000,    // 1 día
+    RUNTIME: 60 * 60 * 1000          // 1 hora
 };
 
 // Instalación del Service Worker
 self.addEventListener('install', (event) => {
-    console.log('🔧 Service Worker: Instalando...');
+    console.log('🔧 Service Worker: Instalando versión', CACHE_VERSION);
 
     event.waitUntil(
-        caches.open(STATIC_CACHE)
-            .then((cache) => {
-                console.log('📦 Service Worker: Cacheando archivos estáticos');
-                return cache.addAll(STATIC_FILES);
+        Promise.all([
+            // Cachear archivos críticos inmediatamente
+            caches.open(STATIC_CACHE).then(cache => {
+                console.log('📦 Cacheando archivos críticos');
+                return cache.addAll(CRITICAL_FILES);
+            }),
+            // Cachear recursos estáticos
+            caches.open(DYNAMIC_CACHE).then(cache => {
+                console.log('📦 Cacheando recursos estáticos');
+                return cache.addAll(STATIC_RESOURCES);
             })
-            .then(() => {
-                console.log('✅ Service Worker: Instalación completada');
-                return self.skipWaiting();
-            })
-            .catch((error) => {
-                console.error('❌ Service Worker: Error en instalación', error);
-            })
+        ]).then(() => {
+            console.log('✅ Service Worker: Instalación completada');
+            return self.skipWaiting();
+        }).catch(error => {
+            console.error('❌ Service Worker: Error en instalación', error);
+        })
     );
 });
 
 // Activación del Service Worker
 self.addEventListener('activate', (event) => {
-    console.log('🚀 Service Worker: Activando...');
+    console.log('🚀 Service Worker: Activando versión', CACHE_VERSION);
 
     event.waitUntil(
-        caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        // Limpiar caches antiguos
-                        if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-                            console.log('🗑️ Service Worker: Eliminando cache antiguo', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
-            .then(() => {
-                console.log('✅ Service Worker: Activación completada');
-                return self.clients.claim();
-            })
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    // Limpiar caches antiguos
+                    if (!cacheName.includes(CACHE_VERSION)) {
+                        console.log('🗑️ Eliminando cache antiguo:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => {
+            console.log('✅ Service Worker: Activación completada');
+            return self.clients.claim();
+        })
     );
 });
 
-// Interceptar requests
+// Interceptar requests con estrategias optimizadas
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Ignorar requests no-GET
-    if (request.method !== 'GET') {
+    // Ignorar requests no-GET y cross-origin
+    if (request.method !== 'GET' || url.origin !== self.location.origin) {
         return;
     }
 
-    // Estrategia para diferentes tipos de recursos
-    if (isStaticResource(url)) {
-        event.respondWith(cacheFirst(request));
+    // Estrategias específicas por tipo de recurso
+    if (isCriticalResource(url)) {
+        event.respondWith(cacheFirstStrategy(request));
+    } else if (isStaticAsset(url)) {
+        event.respondWith(staleWhileRevalidateStrategy(request));
     } else if (isApiRequest(url)) {
-        event.respondWith(networkFirst(request));
+        event.respondWith(networkFirstStrategy(request));
     } else if (isImageRequest(url)) {
-        event.respondWith(staleWhileRevalidate(request));
+        event.respondWith(imageStrategy(request));
     } else {
-        event.respondWith(networkFirst(request));
+        event.respondWith(networkFirstStrategy(request));
     }
 });
 
-// Función para determinar si es un recurso estático
-function isStaticResource(url) {
+// Función para determinar si es un recurso crítico
+function isCriticalResource(url) {
+    return url.pathname === '/' ||
+           url.pathname === '/index.html' ||
+           url.pathname.includes('/manifest.json') ||
+           url.pathname.includes('/icon.svg');
+}
+
+// Función para determinar si es un asset estático
+function isStaticAsset(url) {
     return url.pathname.startsWith('/assets/') ||
-        url.pathname.endsWith('.css') ||
-        url.pathname.endsWith('.js') ||
-        url.pathname.endsWith('.woff2') ||
-        url.pathname.endsWith('.woff') ||
-        url.pathname.endsWith('.ttf');
+           url.pathname.endsWith('.css') ||
+           url.pathname.endsWith('.js') ||
+           url.pathname.match(/\.(woff2?|ttf|eot)$/i);
 }
 
 // Función para determinar si es una request de API
 function isApiRequest(url) {
     return url.pathname.startsWith('/api/') ||
-        url.pathname.startsWith('/socket.io/');
+           url.pathname.startsWith('/socket.io/');
 }
 
 // Función para determinar si es una imagen
 function isImageRequest(url) {
-    return url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+    return url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i);
 }
 
-// Estrategia Cache First
-async function cacheFirst(request) {
+// Estrategia Cache First para recursos críticos
+async function cacheFirstStrategy(request) {
     try {
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
-            console.log('📦 Service Worker: Cache hit para', request.url);
+            console.log('📦 Cache hit crítico:', request.url);
             return cachedResponse;
         }
 
         const networkResponse = await fetch(request);
         if (networkResponse.ok) {
-            const cache = await caches.open(DYNAMIC_CACHE);
+            const cache = await caches.open(STATIC_CACHE);
             cache.put(request, networkResponse.clone());
         }
 
         return networkResponse;
     } catch (error) {
-        console.error('❌ Service Worker: Error en cache-first', error);
-        return new Response('Offline - Recurso no disponible', {
+        console.error('❌ Error en cache-first:', error);
+        return new Response('Offline - Recurso crítico no disponible', {
             status: 503,
             statusText: 'Service Unavailable'
         });
     }
 }
 
-// Estrategia Network First
-async function networkFirst(request) {
+// Estrategia Stale While Revalidate para assets estáticos
+async function staleWhileRevalidateStrategy(request) {
+    const cache = await caches.open(DYNAMIC_CACHE);
+    const cachedResponse = await cache.match(request);
+
+    // Revalidar en background
+    const fetchPromise = fetch(request).then(networkResponse => {
+        if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+            console.log('🔄 Revalidado:', request.url);
+        }
+        return networkResponse;
+    }).catch(error => {
+        console.log('🔄 Error en revalidación:', request.url, error);
+    });
+
+    return cachedResponse || fetchPromise;
+}
+
+// Estrategia Network First para APIs
+async function networkFirstStrategy(request) {
     try {
         const networkResponse = await fetch(request);
         if (networkResponse.ok) {
-            const cache = await caches.open(DYNAMIC_CACHE);
+            const cache = await caches.open(RUNTIME_CACHE);
             cache.put(request, networkResponse.clone());
         }
         return networkResponse;
     } catch (error) {
-        console.log('🌐 Service Worker: Network fallback para', request.url);
+        console.log('🌐 Network fallback para:', request.url);
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
             return cachedResponse;
@@ -163,27 +191,35 @@ async function networkFirst(request) {
     }
 }
 
-// Estrategia Stale While Revalidate
-async function staleWhileRevalidate(request) {
+// Estrategia específica para imágenes
+async function imageStrategy(request) {
     const cache = await caches.open(DYNAMIC_CACHE);
     const cachedResponse = await cache.match(request);
 
-    const fetchPromise = fetch(request).then((networkResponse) => {
+    try {
+        const networkResponse = await fetch(request);
         if (networkResponse.ok) {
             cache.put(request, networkResponse.clone());
         }
         return networkResponse;
-    }).catch(() => {
-        console.log('🔄 Service Worker: Error en revalidación para', request.url);
-    });
-
-    return cachedResponse || fetchPromise;
+    } catch (error) {
+        if (cachedResponse) {
+            console.log('🖼️ Imagen desde cache:', request.url);
+            return cachedResponse;
+        }
+        
+        // Fallback para imágenes
+        return new Response('', {
+            status: 404,
+            statusText: 'Image not found'
+        });
+    }
 }
 
-// Background Sync para mensajes offline
+// Background Sync optimizado
 self.addEventListener('sync', (event) => {
     if (event.tag === 'background-sync') {
-        console.log('🔄 Service Worker: Sincronización en segundo plano');
+        console.log('🔄 Sincronización en segundo plano');
         event.waitUntil(syncOfflineData());
     }
 });
@@ -191,40 +227,74 @@ self.addEventListener('sync', (event) => {
 // Función para sincronizar datos offline
 async function syncOfflineData() {
     try {
-        // Aquí se implementaría la lógica para sincronizar
-        // mensajes offline, cambios de estado, etc.
-        console.log('📤 Service Worker: Sincronizando datos offline');
-
-        // Ejemplo: enviar mensajes pendientes
+        console.log('📤 Sincronizando datos offline');
+        
+        // Limpiar cache expirado
+        await cleanExpiredCache();
+        
+        // Sincronizar mensajes pendientes
         const pendingMessages = await getPendingMessages();
         for (const message of pendingMessages) {
             await sendMessage(message);
         }
     } catch (error) {
-        console.error('❌ Service Worker: Error en sincronización', error);
+        console.error('❌ Error en sincronización:', error);
     }
 }
 
-// Función para obtener mensajes pendientes (placeholder)
+// Limpiar cache expirado
+async function cleanExpiredCache() {
+    const cacheNames = [STATIC_CACHE, DYNAMIC_CACHE, RUNTIME_CACHE];
+    
+    for (const cacheName of cacheNames) {
+        const cache = await caches.open(cacheName);
+        const requests = await cache.keys();
+        
+        for (const request of requests) {
+            const response = await cache.match(request);
+            if (response) {
+                const date = response.headers.get('date');
+                if (date) {
+                    const age = Date.now() - new Date(date).getTime();
+                    const maxAge = getMaxAge(cacheName);
+                    
+                    if (age > maxAge) {
+                        await cache.delete(request);
+                        console.log('🗑️ Cache expirado eliminado:', request.url);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Obtener tiempo máximo de cache por tipo
+function getMaxAge(cacheName) {
+    if (cacheName === STATIC_CACHE) return CACHE_DURATIONS.STATIC;
+    if (cacheName === DYNAMIC_CACHE) return CACHE_DURATIONS.DYNAMIC;
+    return CACHE_DURATIONS.RUNTIME;
+}
+
+// Función para obtener mensajes pendientes
 async function getPendingMessages() {
     // Implementar lógica para obtener mensajes del IndexedDB
     return [];
 }
 
-// Función para enviar mensaje (placeholder)
+// Función para enviar mensaje
 async function sendMessage(message) {
     // Implementar lógica para enviar mensaje al servidor
-    console.log('📤 Service Worker: Enviando mensaje', message);
+    console.log('📤 Enviando mensaje:', message);
 }
 
-// Push notifications (para futuras implementaciones)
+// Push notifications optimizadas
 self.addEventListener('push', (event) => {
-    console.log('🔔 Service Worker: Push notification recibida');
+    console.log('🔔 Push notification recibida');
 
     const options = {
         body: event.data ? event.data.text() : 'Nueva notificación',
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
+        icon: '/icon.svg',
+        badge: '/icon.svg',
         vibrate: [100, 50, 100],
         data: {
             dateOfArrival: Date.now(),
@@ -234,14 +304,16 @@ self.addEventListener('push', (event) => {
             {
                 action: 'explore',
                 title: 'Ver',
-                icon: '/favicon.ico'
+                icon: '/icon.svg'
             },
             {
                 action: 'close',
                 title: 'Cerrar',
-                icon: '/favicon.ico'
+                icon: '/icon.svg'
             }
-        ]
+        ],
+        requireInteraction: false,
+        silent: false
     };
 
     event.waitUntil(
@@ -249,10 +321,8 @@ self.addEventListener('push', (event) => {
     );
 });
 
-// Manejo de clics en notificaciones
+// Manejar clics en notificaciones
 self.addEventListener('notificationclick', (event) => {
-    console.log('👆 Service Worker: Notificación clickeada');
-
     event.notification.close();
 
     if (event.action === 'explore') {
@@ -260,19 +330,4 @@ self.addEventListener('notificationclick', (event) => {
             clients.openWindow('/')
         );
     }
-});
-
-// Mensajes del cliente
-self.addEventListener('message', (event) => {
-    console.log('💬 Service Worker: Mensaje recibido', event.data);
-
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
-
-    if (event.data && event.data.type === 'GET_VERSION') {
-        event.ports[0].postMessage({ version: CACHE_NAME });
-    }
-});
-
-console.log('🔧 Service Worker: Cargado correctamente'); 
+}); 

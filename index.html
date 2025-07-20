@@ -6,15 +6,35 @@
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- PWA Meta Tags -->
+  <!-- PWA Meta Tags optimizados -->
   <meta name="theme-color" content="#5865f2" />
-  <meta name="description" content="Lobby de juegos en tiempo real con chat y sistema de usuarios" />
+  <meta name="description" content="Lobby de juegos en tiempo real con chat y sistema de usuarios - Tic-Tac-Toe AI" />
+  <meta name="keywords" content="tic-tac-toe, juego, chat, lobby, tiempo real, socket.io" />
+  <meta name="author" content="Tic-Tac-Toe AI" />
+  <meta name="robots" content="index, follow" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://tic-tac-toe-ai-ochre.vercel.app/" />
+  <meta property="og:title" content="Tic-Tac-Toe AI - Lobby de Juegos" />
+  <meta property="og:description" content="Lobby de juegos en tiempo real con chat y sistema de usuarios" />
+  <meta property="og:image" content="/icon.svg" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://tic-tac-toe-ai-ochre.vercel.app/" />
+  <meta property="twitter:title" content="Tic-Tac-Toe AI - Lobby de Juegos" />
+  <meta property="twitter:description" content="Lobby de juegos en tiempo real con chat y sistema de usuarios" />
+  <meta property="twitter:image" content="/icon.svg" />
+
+  <!-- PWA específicos -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="TicTacToe AI" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="msapplication-TileColor" content="#5865f2" />
   <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="format-detection" content="telephone=no" />
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json" />
@@ -27,12 +47,14 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="shortcut icon" href="/icon.svg" />
 
   <title>Tic-Tac-Toe AI - Lobby de Juegos</title>
   
-  <!-- Preloads críticos estáticos -->
+  <!-- Preloads críticos para First Paint -->
   <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml">
   <link rel="preload" href="/src/index.tsx" as="script" type="module">
+  <link rel="preload" href="/src/styles/index.css" as="style">
   
   <!-- DNS prefetch para dominios externos -->
   <link rel="dns-prefetch" href="https://esm.sh">
@@ -45,7 +67,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
-  <!-- Tailwind CSS se carga desde el build, no desde CDN en producción -->
+  <!-- Import map optimizado -->
   <script type="importmap">
 {
   "imports": {
@@ -55,11 +77,79 @@
   }
 }
 </script>
+
+  <!-- Critical CSS inline para evitar FOUC -->
+  <style>
+    /* Critical CSS para evitar layout shift */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #36393f;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    #root {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Loading spinner para evitar layout shift */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #36393f;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #5865f2;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body class="bg-gray-900 text-white">
+  <!-- Loading fallback para evitar layout shift -->
+  <div id="loading-fallback" class="loading-spinner">
+    <div class="spinner"></div>
+  </div>
+  
   <div id="root"></div>
+  
   <script type="module" src="/src/index.tsx"></script>
+  
+  <!-- Script para ocultar loading fallback -->
+  <script>
+    // Ocultar loading fallback cuando la app esté lista
+    window.addEventListener('load', () => {
+      const loadingFallback = document.getElementById('loading-fallback');
+      if (loadingFallback) {
+        loadingFallback.style.display = 'none';
+      }
+    });
+    
+    // Fallback si la app tarda más de 3 segundos
+    setTimeout(() => {
+      const loadingFallback = document.getElementById('loading-fallback');
+      if (loadingFallback) {
+        loadingFallback.style.display = 'none';
+      }
+    }, 3000);
+  </script>
 </body>
 
 </html>
