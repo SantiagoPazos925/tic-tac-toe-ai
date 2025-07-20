@@ -29,6 +29,22 @@
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 
   <title>Tic-Tac-Toe AI - Lobby de Juegos</title>
+  
+  <!-- Preloads críticos estáticos -->
+  <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml">
+  <link rel="preload" href="/src/index.tsx" as="script" type="module">
+  
+  <!-- DNS prefetch para dominios externos -->
+  <link rel="dns-prefetch" href="https://esm.sh">
+  <link rel="dns-prefetch" href="https://cdn.socket.io">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  
+  <!-- Preconnect para conexiones críticas -->
+  <link rel="preconnect" href="https://esm.sh" crossorigin>
+  <link rel="preconnect" href="https://cdn.socket.io" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
   <!-- Tailwind CSS se carga desde el build, no desde CDN en producción -->
   <script type="importmap">
 {

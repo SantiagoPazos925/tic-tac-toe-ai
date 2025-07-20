@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { AuthForm } from './components/AuthForm'
 import { ChatSection } from './components/ChatSection'
+import { CriticalResourcePreloader } from './components/CriticalResourcePreloader'
 import { LobbyHeader } from './components/LobbyHeader'
 import { MobileNavigation } from './components/MobileNavigation'
 import { OfflineIndicator } from './components/OfflineIndicator'
@@ -128,6 +129,9 @@ function App() {
 
   return (
     <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/* Preload de recursos críticos */}
+      <CriticalResourcePreloader />
+      
       {/* Indicadores de estado offline y actualizaciones */}
       <OfflineIndicator />
 
