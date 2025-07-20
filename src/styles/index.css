@@ -7,6 +7,8 @@
 @import './components/chat.css';
 @import './components/users.css';
 @import './components/context-menu.css';
+@import './components/virtualized-list.css';
+@import './components/virtualization-demo.css';
 
 /* Utilidades */
 @import './utilities/animations.css';

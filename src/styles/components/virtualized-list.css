@@ -1,0 +1,52 @@
+/* Estilos para listas virtualizadas */
+.virtualized-list-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.virtualized-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.virtualized-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.virtualized-list::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 3px;
+}
+
+.virtualized-list::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+}
+
+.virtualized-list::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* Optimizaciones para rendimiento */
+.virtualized-list .user-card {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .virtualized-list {
+        scrollbar-width: none;
+    }
+    
+    .virtualized-list::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* Variables CSS para scrollbar */
+:root {
+    --scrollbar-track: rgba(255, 255, 255, 0.1);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.3);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.5);
+} 

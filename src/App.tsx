@@ -8,6 +8,7 @@ import { OfflineIndicator } from './components/OfflineIndicator'
 import { SystemMessages } from './components/SystemMessages'
 import { UserProfile } from './components/UserProfile'
 import { UsersList } from './components/UsersList'
+import { VirtualizationDemo } from './components/VirtualizationDemo'
 import { useAuthContext } from './contexts/AuthContext'
 import { useLobbyContext } from './contexts/LobbyContext'
 
@@ -46,6 +47,8 @@ function App() {
   // Estado para navegación móvil (solo en móviles)
   const [showUsers, setShowUsers] = useState(false);
   const [showChannels, setShowChannels] = useState(false);
+  const [showVirtualizationDemo, setShowVirtualizationDemo] = useState(false);
+  
   const {
     isConnected,
     ping,
@@ -132,6 +135,21 @@ function App() {
         isConnected={isConnected}
         ping={ping}
       />
+
+      {/* Botón para mostrar/ocultar demo de virtualización */}
+      <div className="demo-toggle-container">
+        <button
+          className="demo-toggle-button"
+          onClick={() => setShowVirtualizationDemo(!showVirtualizationDemo)}
+        >
+          {showVirtualizationDemo ? '🔽 Ocultar Demo Virtualización' : '🚀 Mostrar Demo Virtualización'}
+        </button>
+      </div>
+
+      {/* Demo de Virtualización */}
+      {showVirtualizationDemo && (
+        <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
+      )}
 
       <div className="lobby-container">
         {/* Left Sidebar - Canales */}
