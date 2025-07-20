@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://tic-tac-toe-ai-ochre.vercel.app/sitemap.xml
+
+# Crawl-delay para evitar sobrecarga del servidor
+Crawl-delay: 1
+
+# Permitir acceso a recursos estáticos
+Allow: /js/
+Allow: /css/
+Allow: /icon.svg
+Allow: /manifest.json
+
+# Bloquear acceso a archivos de configuración
+Disallow: /server/
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /package.json
+Disallow: /tsconfig.json
+Disallow: /vite.config.ts 
