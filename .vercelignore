@@ -1,0 +1,34 @@
+# Excluir archivos del servidor
+server/
+server/**/*
+
+# Excluir archivos de desarrollo
+.env
+.env.local
+.env.development
+.env.test
+
+# Excluir archivos de base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Excluir logs
+*.log
+logs/
+
+# Excluir archivos temporales
+.tmp/
+temp/
+
+# Excluir archivos de TypeScript del servidor
+server/**/*.ts
+server/**/*.js
+
+# Excluir node_modules del servidor
+server/node_modules/
+
+# Excluir archivos de configuración del servidor
+server/package.json
+server/package-lock.json
+server/tsconfig.json 

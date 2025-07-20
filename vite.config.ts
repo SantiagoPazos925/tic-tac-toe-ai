@@ -73,8 +73,7 @@ export default defineConfig({
       '@/services': resolve(__dirname, './src/services'),
       '@/types': resolve(__dirname, './src/types'),
       '@/utils': resolve(__dirname, './src/utils'),
-      '@/styles': resolve(__dirname, './src/styles'),
-      '@/server': resolve(__dirname, './server')
+      '@/styles': resolve(__dirname, './src/styles')
     }
   },
   optimizeDeps: {

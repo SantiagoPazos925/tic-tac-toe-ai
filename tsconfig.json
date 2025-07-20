@@ -52,18 +52,15 @@
       ],
       "@/styles/*": [
         "src/styles/*"
-      ],
-      "@/server/*": [
-        "server/*"
       ]
     }
   },
   "include": [
-    "src/**/*",
-    "server/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "server"
   ]
 }

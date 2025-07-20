@@ -51,6 +51,7 @@ function App() {
   const [showChannels, setShowChannels] = useState(false);
   const [showVirtualizationDemo, setShowVirtualizationDemo] = useState(false);
   const [showImageOptimizationDemo, setShowImageOptimizationDemo] = useState(false);
+  const showDemo = false
   
   const {
     isConnected,
@@ -142,36 +143,40 @@ function App() {
         ping={ping}
       />
 
-      {/* Botón para mostrar/ocultar demo de virtualización */}
-      <div className="demo-toggle-container">
-        <button
-          className="demo-toggle-button"
-          onClick={() => setShowVirtualizationDemo(!showVirtualizationDemo)}
-        >
-          {showVirtualizationDemo ? '🔽 Ocultar Demo Virtualización' : '🚀 Mostrar Demo Virtualización'}
-        </button>
-      </div>
+      {showDemo && (
+        <>  
+          {/* Botón para mostrar/ocultar demo de virtualización */}
+          <div className="demo-toggle-container">
+            <button
+              className="demo-toggle-button"
+              onClick={() => setShowVirtualizationDemo(!showVirtualizationDemo)}
+            >
+              {showVirtualizationDemo ? '🔽 Ocultar Demo Virtualización' : '🚀 Mostrar Demo Virtualización'}
+            </button>
+          </div>
 
-      {/* Demo de Virtualización */}
-      {showVirtualizationDemo && (
-        <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
-      )}
+          {/* Demo de Virtualización */}
+          {showVirtualizationDemo && (
+            <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
+          )}
 
-      {/* Botón para mostrar/ocultar demo de optimización de imágenes */}
-      <div className="demo-toggle-container">
-        <button
-          className="demo-toggle-button"
-          onClick={() => setShowImageOptimizationDemo(!showImageOptimizationDemo)}
-        >
-          {showImageOptimizationDemo ? '🔽 Ocultar Demo Optimización Imágenes' : '🖼️ Mostrar Demo Optimización Imágenes'}
-        </button>
-      </div>
+          {/* Botón para mostrar/ocultar demo de optimización de imágenes */}
+          <div className="demo-toggle-container">
+            <button
+              className="demo-toggle-button"
+              onClick={() => setShowImageOptimizationDemo(!showImageOptimizationDemo)}
+            >
+              {showImageOptimizationDemo ? '🔽 Ocultar Demo Optimización Imágenes' : '🖼️ Mostrar Demo Optimización Imágenes'}
+            </button>
+          </div>
 
-      {/* Demo de Optimización de Imágenes */}
-      {showImageOptimizationDemo && (
-        <ImageOptimizationDemo />
-      )}
-
+          {/* Demo de Optimización de Imágenes */}
+          {showImageOptimizationDemo && (
+            <ImageOptimizationDemo />
+          )}
+      </>
+     
+      ) }
       <div className="lobby-container">
         {/* Left Sidebar - Canales */}
         <div className={`left-sidebar ${isMobile && showChannels ? 'show-mobile' : ''}`}>
