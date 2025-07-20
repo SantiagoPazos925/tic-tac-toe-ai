@@ -54,30 +54,66 @@ export class SocketService {
 
     private handleJoinLobby(socket: Socket, userData: { name: string }): void {
         try {
-            const user = this.lobbyService.joinLobby(socket.id, userData.name);
+            Logger.socket(`🔍 DEBUG: Iniciando joinLobby para ${userData.name} con socket ${socket.id}`);
+
+            const { user, disconnectedSocketId } = this.lobbyService.joinLobby(socket.id, userData.name);
             const isReconnection = this.lobbyService.checkReconnection(userData.name);
 
-            // Siempre crear mensaje del sistema cuando un usuario se une
-            const systemMessage = this.lobbyService.addSystemMessage(
-                isReconnection
-                    ? `${userData.name} se reconectó al lobby`
-                    : `${userData.name} se unió al lobby`
-            );
-            Logger.socket(`📢 Enviando mensaje del sistema: ${systemMessage.content}`);
-            this.io.emit('chat-message', systemMessage);
+            Logger.socket(`🔍 DEBUG: joinLobby retornó - user: ${user.name}, disconnectedSocketId: ${disconnectedSocketId}, isReconnection: ${isReconnection}`);
 
-            // Notificar a todos los usuarios sobre el nuevo usuario
-            this.io.emit('user-joined', user);
+            // Si se desconectó una conexión anterior, notificar al cliente anterior INMEDIATAMENTE
+            if (disconnectedSocketId) {
+                Logger.socket(`🔍 DEBUG: Buscando socket anterior: ${disconnectedSocketId}`);
 
-            // Enviar lista actual de usuarios al nuevo usuario
-            const usersList = this.lobbyService.getConnectedUsers();
-            socket.emit('users-list', usersList);
+                // Verificar si el socket anterior aún está conectado
+                const previousSocket = this.io.sockets.sockets.get(disconnectedSocketId);
+                Logger.socket(`🔍 DEBUG: Socket anterior encontrado: ${!!previousSocket}, conectado: ${previousSocket?.connected}`);
 
-            // Enviar historial del chat al nuevo usuario
-            const chatHistory = this.lobbyService.getChatHistory();
-            socket.emit('chat-history', chatHistory);
+                if (previousSocket && previousSocket.connected) {
+                    Logger.socket(`🔍 DEBUG: Enviando force-disconnect a socket ${disconnectedSocketId}`);
+                    previousSocket.emit('force-disconnect', {
+                        message: 'Has sido desconectado porque te conectaste desde otro dispositivo',
+                        reason: 'new-login'
+                    });
+                    Logger.socket(`Usuario ${userData.name} desconectado de dispositivo anterior: ${disconnectedSocketId}`);
 
-            Logger.socket(`Usuario ${userData.name} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby`);
+                    // Desconectar el socket anterior INMEDIATAMENTE
+                    Logger.socket(`🔍 DEBUG: Desconectando socket anterior inmediatamente: ${disconnectedSocketId}`);
+                    previousSocket.disconnect(true);
+                    Logger.socket(`Socket anterior desconectado inmediatamente: ${disconnectedSocketId}`);
+                } else {
+                    Logger.socket(`🔍 DEBUG: Socket anterior no encontrado o no conectado: ${disconnectedSocketId}`);
+                    Logger.socket(`Socket anterior ya no está conectado: ${disconnectedSocketId}`);
+                }
+            } else {
+                Logger.socket(`🔍 DEBUG: No se encontró socket anterior para desconectar`);
+            }
+
+            // Esperar un momento para asegurar que la desconexión anterior se complete
+            setTimeout(() => {
+                // Siempre crear mensaje del sistema cuando un usuario se une
+                const systemMessage = this.lobbyService.addSystemMessage(
+                    isReconnection
+                        ? `${userData.name} se reconectó al lobby`
+                        : `${userData.name} se unió al lobby`
+                );
+                Logger.socket(`📢 Enviando mensaje del sistema: ${systemMessage.content}`);
+                this.io.emit('chat-message', systemMessage);
+
+                // Notificar a todos los usuarios sobre el nuevo usuario
+                this.io.emit('user-joined', user);
+
+                // Enviar lista actual de usuarios al nuevo usuario
+                const usersList = this.lobbyService.getConnectedUsers();
+                Logger.socket(`🔍 DEBUG: Enviando lista de usuarios (${usersList.length} usuarios): ${usersList.map(u => u.name).join(', ')}`);
+                socket.emit('users-list', usersList);
+
+                // Enviar historial del chat al nuevo usuario
+                const chatHistory = this.lobbyService.getChatHistory();
+                socket.emit('chat-history', chatHistory);
+
+                Logger.socket(`Usuario ${userData.name} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby`);
+            }, 100); // Pequeño delay para asegurar que la desconexión anterior se complete
 
         } catch (error) {
             Logger.error('Error al unirse al lobby', error);
@@ -104,9 +140,16 @@ export class SocketService {
 
     private handleUpdateStatus(socket: Socket, status: 'online' | 'away'): void {
         try {
+            Logger.socket(`🔍 DEBUG: Actualizando estado para socket ${socket.id} a: ${status}`);
             const user = this.lobbyService.updateUserStatus(socket.id, status);
+
             if (user) {
+                Logger.socket(`🔍 DEBUG: Usuario actualizado: ${user.name} - Estado: ${user.status}`);
+                Logger.socket(`🔍 DEBUG: Enviando user-updated a todos los clientes`);
                 this.io.emit('user-updated', user);
+                Logger.socket(`🔍 DEBUG: Evento user-updated enviado exitosamente`);
+            } else {
+                Logger.socket(`🔍 DEBUG: No se pudo actualizar el usuario para socket ${socket.id}`);
             }
 
         } catch (error) {

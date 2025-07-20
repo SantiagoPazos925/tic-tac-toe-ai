@@ -5,15 +5,50 @@ import { validateChatMessage, ValidationError } from '../utils/validation.js';
 
 export class LobbyService {
     private connectedUsers = new Map<string, LobbyUser>();
-    private userSessions = new Map<string, { name: string; lastSeen: Date }>();
+    private userSessions = new Map<string, { name: string; lastSeen: Date; socketId: string }>();
     private chatMessages: ChatMessage[] = [];
 
     // Unirse al lobby
-    joinLobby(socketId: string, username: string): LobbyUser {
+    joinLobby(socketId: string, username: string): { user: LobbyUser; disconnectedSocketId: string | null } {
         const now = new Date();
-        const existingUser = this.userSessions.get(username);
-        const isReconnection = existingUser &&
-            (now.getTime() - existingUser.lastSeen.getTime()) < lobbyConfig.reconnectionTimeout;
+        let disconnectedSocketId: string | null = null;
+
+        Logger.lobby(`🔍 DEBUG: joinLobby iniciado para ${username} con socket ${socketId}`);
+        Logger.lobby(`🔍 DEBUG: Usuarios conectados actualmente: ${Array.from(this.connectedUsers.values()).map(u => `${u.name}(${u.id})`).join(', ')}`);
+
+        // Buscar y eliminar TODAS las conexiones existentes para este usuario
+        const existingConnections: string[] = [];
+        for (const [socketIdKey, user] of this.connectedUsers.entries()) {
+            if (user.name === username && socketIdKey !== socketId) {
+                existingConnections.push(socketIdKey);
+                this.connectedUsers.delete(socketIdKey);
+                Logger.lobby(`🔍 DEBUG: Eliminando conexión existente para ${username}: ${socketIdKey}`);
+            }
+        }
+
+        Logger.lobby(`🔍 DEBUG: Conexiones existentes encontradas: ${existingConnections.length}`);
+
+        // Tomar la primera conexión eliminada como la principal para notificar
+        if (existingConnections.length > 0) {
+            disconnectedSocketId = existingConnections[0];
+            Logger.lobby(`🔍 DEBUG: Desconectando conexión principal para ${username}: ${disconnectedSocketId}`);
+        }
+
+        // Limpiar cualquier sesión anterior
+        const existingSession = this.userSessions.get(username);
+        Logger.lobby(`🔍 DEBUG: Sesión existente para ${username}: ${existingSession ? `socketId: ${existingSession.socketId}, lastSeen: ${existingSession.lastSeen}` : 'no encontrada'}`);
+
+        if (existingSession && existingSession.socketId && existingSession.socketId !== socketId) {
+            if (this.connectedUsers.has(existingSession.socketId)) {
+                this.connectedUsers.delete(existingSession.socketId);
+                Logger.lobby(`🔍 DEBUG: Removiendo sesión anterior para ${username}: ${existingSession.socketId}`);
+            }
+        }
+
+        const isReconnection = existingSession &&
+            (now.getTime() - existingSession.lastSeen.getTime()) < lobbyConfig.reconnectionTimeout;
+
+        Logger.lobby(`🔍 DEBUG: Es reconexión: ${isReconnection}`);
 
         const user: LobbyUser = {
             id: socketId,
@@ -24,11 +59,18 @@ export class LobbyService {
         };
 
         this.connectedUsers.set(socketId, user);
-        this.userSessions.set(username, { name: username, lastSeen: now });
+        this.userSessions.set(username, {
+            name: username,
+            lastSeen: now,
+            socketId: socketId
+        });
 
-        Logger.lobby(`Usuario ${username} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby`);
+        Logger.lobby(`🔍 DEBUG: Usuario ${username} agregado con socket ${socketId}`);
+        Logger.lobby(`🔍 DEBUG: Usuarios conectados después: ${Array.from(this.connectedUsers.values()).map(u => `${u.name}(${u.id})`).join(', ')}`);
 
-        return user;
+        Logger.lobby(`Usuario ${username} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby (socket: ${socketId})`);
+
+        return { user, disconnectedSocketId };
     }
 
     // Salir del lobby
@@ -53,7 +95,11 @@ export class LobbyService {
         }
 
         const now = new Date();
-        this.userSessions.set(user.name, { name: user.name, lastSeen: now });
+        this.userSessions.set(user.name, {
+            name: user.name,
+            lastSeen: now,
+            socketId: socketId
+        });
         this.connectedUsers.delete(socketId);
 
         Logger.lobby(`Usuario ${user.name} se desconectó temporalmente`);
@@ -72,14 +118,23 @@ export class LobbyService {
 
     // Actualizar estado del usuario
     updateUserStatus(socketId: string, status: 'online' | 'away'): LobbyUser | null {
-        const user = this.connectedUsers.get(socketId);
-        if (!user) return null;
+        Logger.lobby(`🔍 DEBUG: updateUserStatus llamado para socket ${socketId} con estado ${status}`);
 
+        const user = this.connectedUsers.get(socketId);
+        if (!user) {
+            Logger.lobby(`🔍 DEBUG: No se encontró usuario para socket ${socketId}`);
+            Logger.lobby(`🔍 DEBUG: Usuarios conectados: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
+            return null;
+        }
+
+        Logger.lobby(`🔍 DEBUG: Usuario encontrado: ${user.name}, estado actual: ${user.status}`);
         user.status = status;
         user.lastSeen = new Date();
         this.connectedUsers.set(socketId, user);
 
-        Logger.lobby(`Usuario ${user.name} cambió estado a: ${status}`);
+        Logger.lobby(`🔍 DEBUG: Usuario ${user.name} cambió estado a: ${status}`);
+        Logger.lobby(`🔍 DEBUG: Usuario actualizado en connectedUsers: ${user.name}(${user.id}) - ${user.status}`);
+
         return user;
     }
 
@@ -136,9 +191,34 @@ export class LobbyService {
         }
     }
 
-    // Obtener lista de usuarios conectados
+    // Obtener lista de usuarios conectados (sin duplicados)
     getConnectedUsers(): LobbyUser[] {
-        return Array.from(this.connectedUsers.values());
+        const uniqueUsers = new Map<string, LobbyUser>();
+
+        for (const user of this.connectedUsers.values()) {
+            // Si ya existe un usuario con este nombre, mantener el más reciente
+            const existingUser = uniqueUsers.get(user.name);
+            if (!existingUser || (user.lastSeen && existingUser.lastSeen && user.lastSeen > existingUser.lastSeen)) {
+                uniqueUsers.set(user.name, user);
+            }
+        }
+
+        // Limpiar sesiones antiguas que ya no están conectadas
+        this.cleanupDisconnectedSessions();
+
+        return Array.from(uniqueUsers.values());
+    }
+
+    // Limpiar sesiones de usuarios que ya no están conectados
+    private cleanupDisconnectedSessions(): void {
+        const connectedUsernames = new Set(Array.from(this.connectedUsers.values()).map(user => user.name));
+
+        for (const [username, session] of this.userSessions.entries()) {
+            if (!connectedUsernames.has(username)) {
+                this.userSessions.delete(username);
+                Logger.lobby(`Sesión limpiada para usuario desconectado: ${username}`);
+            }
+        }
     }
 
     // Obtener historial del chat
@@ -163,12 +243,13 @@ export class LobbyService {
 
     // Obtener estadísticas del lobby
     getLobbyStats() {
+        const uniqueUsers = this.getConnectedUsers();
         return {
-            connectedUsers: this.connectedUsers.size,
+            connectedUsers: uniqueUsers.length,
             totalSessions: this.userSessions.size,
             chatMessages: this.chatMessages.length,
-            onlineUsers: Array.from(this.connectedUsers.values()).filter(u => u.status === 'online').length,
-            awayUsers: Array.from(this.connectedUsers.values()).filter(u => u.status === 'away').length
+            onlineUsers: uniqueUsers.filter(u => u.status === 'online').length,
+            awayUsers: uniqueUsers.filter(u => u.status === 'away').length
         };
     }
 

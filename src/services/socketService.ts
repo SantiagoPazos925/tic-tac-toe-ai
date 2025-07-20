@@ -11,15 +11,50 @@ class SocketService {
     }
 
     connect(): Socket {
-        if (!this.socket) {
-            this.socket = io(this.baseUrl, {
-                // Configuraciones para evitar reconexiones múltiples
-                reconnection: true,
-                reconnectionAttempts: 5,
-                reconnectionDelay: 1000,
-                timeout: 20000
-            });
+        if (this.socket && this.socket.connected) {
+            console.log('🔍 DEBUG: Socket ya conectado, retornando conexión existente');
+            return this.socket;
         }
+
+        if (this.socket) {
+            console.log('🔍 DEBUG: Socket existe pero no conectado, desconectando antes de reconectar');
+            this.socket.disconnect();
+            this.socket = null;
+        }
+
+        console.log('🔍 DEBUG: Creando nueva conexión de socket');
+        this.socket = io(this.baseUrl, {
+            // Configuraciones para mantener conexión estable
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
+            forceNew: true, // Forzar nueva conexión
+            autoConnect: true // Conectar automáticamente
+        });
+
+        // Agregar listeners para debug
+        this.socket.on('connect', () => {
+            console.log('🔍 DEBUG: Socket conectado con ID:', this.socket?.id);
+        });
+
+        this.socket.on('disconnect', (reason) => {
+            console.log('🔍 DEBUG: Socket desconectado, razón:', reason);
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('🔍 DEBUG: Error de conexión:', error);
+        });
+
+        this.socket.on('reconnect', (attemptNumber) => {
+            console.log('🔍 DEBUG: Socket reconectado, intento:', attemptNumber);
+        });
+
+        this.socket.on('reconnect_error', (error) => {
+            console.error('🔍 DEBUG: Error de reconexión:', error);
+        });
+
         return this.socket;
     }
 
@@ -138,6 +173,22 @@ class SocketService {
             // Remover listener anterior para evitar duplicados
             this.socket.off('pong');
             this.socket.on('pong', callback);
+        }
+    }
+
+    onForceDisconnect(callback: (data: { message: string; reason: string }) => void): void {
+        if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('force-disconnect');
+            this.socket.on('force-disconnect', callback);
+        }
+    }
+
+    onError(callback: (error: { message: string }) => void): void {
+        if (this.socket) {
+            // Remover listener anterior para evitar duplicados
+            this.socket.off('error');
+            this.socket.on('error', callback);
         }
     }
 

@@ -40,6 +40,10 @@ interface LobbyContextType extends LobbyState {
     // Acciones de logout
     handleLogout: () => void;
 
+    // Servicios de socket
+    socketService: any;
+    sendPing: () => void;
+
     // Referencias para scroll
     chatEndRef: React.RefObject<HTMLDivElement | null>;
     systemMessagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -60,7 +64,7 @@ interface LobbyProviderProps {
 }
 
 export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
-    const { isConnected, ping, users, chatMessages, socketService } = useSocket();
+    const { isConnected, ping, users, chatMessages, userMessages, systemMessages, socketService } = useSocket();
     const { logout, authUser } = useAuthContext();
 
     // Estado local
@@ -90,11 +94,10 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
         if (chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [chatMessages.filter(message => message.type === 'user').length]);
+    }, [userMessages.length]);
 
     // Scroll automático para mensajes del sistema
     useEffect(() => {
-        const systemMessages = chatMessages.filter(message => message.type === 'system');
         if (systemMessagesEndRef.current && systemMessages.length > 0) {
             setTimeout(() => {
                 systemMessagesEndRef.current?.scrollIntoView({
@@ -103,7 +106,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
                 });
             }, 100);
         }
-    }, [chatMessages.filter(message => message.type === 'system').length]);
+    }, [systemMessages.length]);
 
     // Enviar mensaje
     const sendMessage = useCallback((e: React.FormEvent) => {
@@ -231,6 +234,10 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
         closeUserContextMenu,
         handleUserAction,
         handleLogout,
+
+        // Servicios de socket
+        socketService,
+        sendPing: () => socketService.sendPing(),
 
         // Referencias
         chatEndRef,

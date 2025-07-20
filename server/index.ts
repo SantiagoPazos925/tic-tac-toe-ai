@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import compression from 'compression';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 // Configuración
 import {
@@ -37,9 +40,38 @@ const io = new Server(httpServer, socketConfig);
 // Inicializar servicios
 const socketService = new SocketService(io);
 
+// Middleware de seguridad y optimización
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+}));
+
+// Compresión gzip
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // máximo 100 requests por ventana
+    message: {
+        error: 'Demasiadas requests desde esta IP, intenta de nuevo en 15 minutos'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use('/api/', limiter);
+
 // Middleware global
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);
 
 // Inicializar base de datos
@@ -63,7 +95,9 @@ app.get('/health', (req, res) => {
             timestamp: new Date().toISOString(),
             database: 'Connected',
             environment: serverConfig.environment,
-            lobby: stats
+            lobby: stats,
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
         }
     });
 });

@@ -1,3 +1,6 @@
+/* Importar estilos base existentes */
+@import './base/reset.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -101,9 +104,6 @@
     --font-family-base: 'Whitney', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
     --font-family-emoji: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", "EmojiOne Mozilla", "Twemoji Mozilla", "Segoe UI Symbol", "Arial", "sans-serif";
 }
-
-/* Importar estilos base existentes */
-@import './base/reset.css';
 
 /* Componentes personalizados de Tailwind */
 @layer components {

@@ -1,0 +1,43 @@
+{
+    "name": "Tic-Tac-Toe AI - Lobby de Juegos",
+    "short_name": "TicTacToe AI",
+    "description": "Lobby de juegos en tiempo real con chat y sistema de usuarios",
+    "version": "1.0.0",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#36393f",
+    "theme_color": "#5865f2",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "es",
+    "dir": "ltr",
+    "categories": [
+        "games",
+        "social",
+        "entertainment"
+    ],
+    "icons": [
+        {
+            "src": "/vite.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "edge_side_panel": {
+        "preferred_width": 400
+    },
+    "launch_handler": {
+        "client_mode": "navigate-existing"
+    },
+    "protocol_handlers": [
+        {
+            "protocol": "web+tictactoe",
+            "url": "/game/%s"
+        }
+    ]
+}

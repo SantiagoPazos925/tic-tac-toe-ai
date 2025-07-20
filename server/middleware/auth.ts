@@ -76,16 +76,23 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 
             userRequests.count++;
 
             if (userRequests.count > maxRequests) {
-                Logger.warn(`Rate limit excedido para IP: ${ip}`);
+                Logger.warn(`Rate limit excedido para IP: ${ip} (${userRequests.count}/${maxRequests})`);
                 return res.status(429).json({
                     success: false,
-                    error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.'
+                    error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.',
+                    retryAfter: Math.ceil((userRequests.resetTime - now) / 1000)
                 });
             }
         }
 
         next();
     };
+}
+
+// Función para limpiar rate limiting (útil para desarrollo)
+export function clearRateLimit() {
+    // Esta función se puede llamar para limpiar el rate limiting en desarrollo
+    Logger.info('Rate limiting limpiado para desarrollo');
 }
 
 // Middleware para logging de requests

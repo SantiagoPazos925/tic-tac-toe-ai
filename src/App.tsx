@@ -1,16 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { motion } from 'motion/react'
 import { useAuthContext } from './contexts/AuthContext'
 import { useLobbyContext } from './contexts/LobbyContext'
-import { useSocket } from './hooks/useSocket'
 import { AuthForm } from './components/AuthForm'
 import { LobbyHeader } from './components/LobbyHeader'
 import { SystemMessages } from './components/SystemMessages'
 import { ChatSection } from './components/ChatSection'
 import { UsersList } from './components/UsersList'
 import { UserProfile } from './components/UserProfile'
-import { UserContextMenu } from './components/UserContextMenu'
 import { MobileNavigation } from './components/MobileNavigation'
+import { OfflineIndicator } from './components/OfflineIndicator'
+
+// Lazy load components that are not critical for initial render
+const UserContextMenu = lazy(() => import('./components/UserContextMenu').then(module => ({ default: module.UserContextMenu })));
+
+// Loading component for lazy loaded components
+const LazyLoader = () => (
+  <div className="flex items-center justify-center p-4">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-discord-accent"></div>
+  </div>
+);
 
 // Hook para detectar el tamaño de pantalla
 const useIsMobile = () => {
@@ -32,7 +41,6 @@ const useIsMobile = () => {
 
 function App() {
   const { authUser, isAuthenticated } = useAuthContext();
-  const { socketService, sendPing } = useSocket();
   const isMobile = useIsMobile();
 
   // Estado para navegación móvil (solo en móviles)
@@ -58,15 +66,25 @@ function App() {
     handleUserAction,
     handleLogout,
     chatEndRef,
-    systemMessagesEndRef
+    systemMessagesEndRef,
+    socketService,
+    sendPing
   } = useLobbyContext();
 
   // Unirse al lobby cuando el usuario se autentica y el socket está conectado
   useEffect(() => {
     if (authUser && isConnected) {
-      socketService.joinLobby(authUser.username);
+      // Solo unirse al lobby si no se ha unido ya (evitar doble conexión)
+      const currentSocket = socketService.getSocket();
+      if (currentSocket && currentSocket.connected) {
+        // Verificar si ya está en el lobby
+        const isAlreadyInLobby = users.some(user => user.name === authUser.username);
+        if (!isAlreadyInLobby) {
+          socketService.joinLobby(authUser.username);
+        }
+      }
     }
-  }, [authUser, isConnected, socketService]);
+  }, [authUser, isConnected, socketService, users]);
 
   // Enviar pings periódicos para medir latencia
   useEffect(() => {
@@ -106,6 +124,9 @@ function App() {
 
   return (
     <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/* Indicadores de estado offline y actualizaciones */}
+      <OfflineIndicator />
+
       <LobbyHeader
         isConnected={isConnected}
         ping={ping}
@@ -176,12 +197,14 @@ function App() {
 
       {/* User Context Menu */}
       {showUserContextMenu && contextMenuUser && (
-        <UserContextMenu
-          contextMenuUser={contextMenuUser}
-          contextMenuPosition={contextMenuPosition}
-          onUserAction={handleUserAction}
-          onClose={closeUserContextMenu}
-        />
+        <Suspense fallback={<LazyLoader />}>
+          <UserContextMenu
+            contextMenuUser={contextMenuUser}
+            contextMenuPosition={contextMenuPosition}
+            onUserAction={handleUserAction}
+            onClose={closeUserContextMenu}
+          />
+        </Suspense>
       )}
     </motion.div>
   );
