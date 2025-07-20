@@ -53,14 +53,39 @@ export function validateLoginData(data: LoginRequest): void {
 
 // Sanitizar entrada de usuario
 export function sanitizeInput(input: string): string {
-    return input.trim().replace(/[<>]/g, '');
+    const trimmed = input.trim();
+    const sanitized = trimmed.replace(/[<>]/g, '');
+    console.log('🔍 DEBUG: sanitizeInput - original:', JSON.stringify(trimmed), 'sanitizado:', JSON.stringify(sanitized));
+    return sanitized;
 }
 
 // Validar y sanitizar mensaje del chat
 export function validateChatMessage(content: string): string {
-    const sanitized = sanitizeInput(content);
-    if (!sanitized || sanitized.length > 500) {
-        throw new ValidationError('El mensaje debe tener entre 1 y 500 caracteres');
+    console.log('🔍 DEBUG: Validando mensaje original:', JSON.stringify(content));
+    
+    if (!content || typeof content !== 'string') {
+        console.log('🔍 DEBUG: Mensaje es null, undefined o no es string');
+        throw new ValidationError('El mensaje no puede estar vacío');
     }
+    
+    if (content.trim().length === 0) {
+        console.log('🔍 DEBUG: Mensaje está vacío después de trim');
+        throw new ValidationError('El mensaje no puede estar vacío');
+    }
+    
+    const sanitized = sanitizeInput(content);
+    console.log('🔍 DEBUG: Mensaje sanitizado:', JSON.stringify(sanitized));
+    
+    if (!sanitized || sanitized.length === 0) {
+        console.log('🔍 DEBUG: Mensaje queda vacío después de sanitización');
+        throw new ValidationError('El mensaje no puede estar vacío después de la sanitización');
+    }
+    
+    if (sanitized.length > 500) {
+        console.log('🔍 DEBUG: Mensaje excede 500 caracteres');
+        throw new ValidationError('El mensaje no puede tener más de 500 caracteres');
+    }
+    
+    console.log('🔍 DEBUG: Mensaje válido:', sanitized);
     return sanitized;
 } 

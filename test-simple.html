@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple de Mensajes</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+        }
+        input {
+            background-color: #404040;
+            color: #ffffff;
+            width: 300px;
+        }
+        button {
+            background-color: #007bff;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .connected { background-color: #28a745; }
+        .disconnected { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Simple de Mensajes</h1>
+    
+    <div class="container">
+        <div id="status" class="status disconnected">Desconectado</div>
+        <button onclick="connect()">Conectar</button>
+        <button onclick="joinLobby()">Unirse al Lobby</button>
+    </div>
+
+    <div class="container">
+        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." value="hola">
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <script>
+        let socket = null;
+
+        function updateStatus(status, className) {
+            document.getElementById('status').textContent = status;
+            document.getElementById('status').className = `status ${className}`;
+        }
+
+        function connect() {
+            console.log('🔌 Conectando...');
+            updateStatus('Conectando...', 'disconnected');
+
+            const serverUrl = 'http://localhost:3001';
+            socket = io(serverUrl);
+
+            socket.on('connect', () => {
+                console.log('✅ Conectado:', socket.id);
+                updateStatus('Conectado', 'connected');
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log('❌ Desconectado:', reason);
+                updateStatus('Desconectado', 'disconnected');
+            });
+
+            socket.on('error', (error) => {
+                console.error('❌ Error:', error);
+                alert(`Error: ${error.message}`);
+            });
+
+            socket.on('chat-message', (message) => {
+                console.log('📨 Mensaje recibido:', message);
+            });
+        }
+
+        function joinLobby() {
+            if (!socket) {
+                alert('Primero conéctate');
+                return;
+            }
+            console.log('👋 Uniéndose al lobby como "TestUser"');
+            socket.emit('join-lobby', { name: 'TestUser' });
+        }
+
+        function sendMessage() {
+            if (!socket) {
+                alert('Primero conéctate');
+                return;
+            }
+
+            const content = document.getElementById('messageInput').value;
+            console.log('📤 Enviando mensaje:', { content });
+            
+            socket.emit('send-message', { content: content });
+        }
+
+        // Auto-conectar al cargar
+        window.addEventListener('load', connect);
+    </script>
+</body>
+</html> 

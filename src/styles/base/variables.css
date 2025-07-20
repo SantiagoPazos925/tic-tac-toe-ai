@@ -1,34 +1,44 @@
-/* Variables CSS para el tema oscuro */
+/* Variables CSS para el tema oscuro moderno */
 :root {
     /* Colores principales */
-    --discord-bg: #36393f;
-    --discord-secondary: #2f3136;
-    --discord-tertiary: #202225;
+    --discord-bg: #1a1b1e;
+    --discord-secondary: #2c2f33;
+    --discord-tertiary: #23272a;
 
     /* Colores de acento */
     --discord-accent: #5865f2;
     --discord-accent-hover: #4752c4;
+    --discord-accent-light: rgba(88, 101, 242, 0.1);
 
     /* Colores de estado */
     --discord-success: #57f287;
+    --discord-success-hover: #3ba55c;
     --discord-warning: #faa61a;
+    --discord-warning-hover: #e67e22;
     --discord-danger: #ed4245;
+    --discord-danger-hover: #d73a3d;
 
     /* Colores de texto */
     --discord-text-primary: #ffffff;
-    --discord-text-secondary: #b9bbbe;
+    --discord-text-secondary: #dcddde;
     --discord-text-muted: #72767d;
+    --discord-text-link: #00b0f4;
 
     /* Colores de bordes y elementos */
     --discord-border: #40444b;
+    --discord-border-light: rgba(255, 255, 255, 0.1);
     --discord-input-bg: #40444b;
-    --discord-card-bg: #2f3136;
+    --discord-card-bg: #2c2f33;
     --discord-hover: #40444b;
+    --discord-hover-light: rgba(255, 255, 255, 0.05);
 
-    /* Sombras */
-    --discord-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    --discord-shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --discord-shadow-focus: 0 0 0 2px rgba(88, 101, 242, 0.2);
+    /* Sombras y efectos */
+    --discord-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --discord-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --discord-shadow-focus: 0 0 0 2px rgba(88, 101, 242, 0.3);
+    --discord-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --discord-shadow-popup: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --discord-glow: 0 0 20px rgba(88, 101, 242, 0.3);
 
     /* Dimensiones */
     --discord-sidebar-width: 240px;

@@ -58,10 +58,23 @@ export class SocketService {
 
             const { user, disconnectedSocketId } = this.lobbyService.joinLobby(socket.id, userData.name);
             
-            // Si el usuario ya está conectado con el mismo socket, no hacer nada
+            // Si el usuario ya está conectado con el mismo socket, verificar que esté registrado
             if (!user) {
-                Logger.socket(`🔍 DEBUG: Usuario ${userData.name} ya está conectado con socket ${socket.id}, ignorando`);
-                return;
+                Logger.socket(`🔍 DEBUG: Usuario ${userData.name} ya está conectado con socket ${socket.id}, verificando registro`);
+                const existingUser = this.lobbyService.getUserBySocketId(socket.id);
+                if (existingUser) {
+                    Logger.socket(`🔍 DEBUG: Usuario ${userData.name} ya está registrado, enviando datos actuales`);
+                    // Enviar datos actuales al usuario
+                    const usersList = this.lobbyService.getConnectedUsers();
+                    socket.emit('users-list', usersList);
+                    const chatHistory = this.lobbyService.getChatHistory();
+                    socket.emit('chat-history', chatHistory);
+                    return;
+                } else {
+                    Logger.socket(`🔍 DEBUG: Usuario ${userData.name} no está registrado, esto es un error`);
+                    socket.emit('error', { message: 'Error al unirse al lobby' });
+                    return;
+                }
             }
 
             const isReconnection = this.lobbyService.checkReconnection(userData.name);
@@ -128,18 +141,37 @@ export class SocketService {
 
     private handleSendMessage(socket: Socket, messageData: { content: string }): void {
         try {
+            Logger.socket(`🔍 DEBUG: Recibido mensaje de socket ${socket.id}:`, messageData);
+            
+            if (!messageData) {
+                Logger.warn(`Mensaje null/undefined recibido de socket ${socket.id}`);
+                socket.emit('error', { message: 'El mensaje no puede estar vacío' });
+                return;
+            }
+            
+            if (!messageData.content) {
+                Logger.warn(`Mensaje sin contenido recibido de socket ${socket.id}:`, messageData);
+                socket.emit('error', { message: 'El mensaje no puede estar vacío' });
+                return;
+            }
+            
+            Logger.socket(`🔍 DEBUG: Procesando mensaje: "${messageData.content}"`);
             const chatMessage = this.lobbyService.sendMessage(socket.id, messageData.content);
 
             if (chatMessage) {
+                Logger.socket(`✅ Mensaje enviado exitosamente por ${chatMessage.sender}: ${chatMessage.content}`);
                 // Enviar mensaje a todos los usuarios
                 this.io.emit('chat-message', chatMessage);
             } else {
+                Logger.warn(`❌ Mensaje rechazado para socket ${socket.id}: "${messageData.content}"`);
                 socket.emit('error', { message: 'Mensaje inválido' });
             }
 
         } catch (error) {
             Logger.error('Error enviando mensaje', error);
-            socket.emit('error', { message: 'Error al enviar mensaje' });
+            const errorMessage = error instanceof Error ? error.message : 'Error al enviar mensaje';
+            Logger.socket(`🔍 DEBUG: Error específico: ${errorMessage}`);
+            socket.emit('error', { message: errorMessage });
         }
     }
 

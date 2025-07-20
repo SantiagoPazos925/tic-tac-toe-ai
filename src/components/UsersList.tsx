@@ -1,4 +1,5 @@
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect, useState } from 'react';
 import { User } from '../types';
 import { formatJoinDate, getAvatarInitial, getStatusColor, getStatusText } from '../utils/formatters';
 import { VirtualizedUsersList } from './VirtualizedUsersList';
@@ -8,17 +9,43 @@ interface UsersListProps {
     onUserContextMenu: (e: React.MouseEvent, user: User) => void;
     useVirtualization?: boolean;
     virtualizationThreshold?: number;
+    onStatusChange?: (status: string) => void;
+    onLogout?: () => void;
+    currentUser?: User | null;
 }
 
 export const UsersList = ({ 
     users, 
     onUserContextMenu, 
     useVirtualization = true,
-    virtualizationThreshold = 10 
+    virtualizationThreshold = 10,
+    onStatusChange,
+    onLogout,
+    currentUser
 }: UsersListProps) => {
+    const [showStatusPopup, setShowStatusPopup] = useState(false);
+    
     // Separar usuarios por estado
     const onlineUsers = users.filter(user => user.status === 'online');
     const awayUsers = users.filter(user => user.status === 'away');
+
+    // Cerrar popup al hacer clic fuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('.user-profile-section-integrated')) {
+                setShowStatusPopup(false);
+            }
+        };
+
+        if (showStatusPopup) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showStatusPopup]);
 
     const renderUserCard = (user: User) => (
         <motion.div
@@ -83,6 +110,86 @@ export const UsersList = ({
         <div className="users-container">
             {renderUsersSection(onlineUsers, 'USUARIOS EN LÍNEA', '👥')}
             {renderUsersSection(awayUsers, 'USUARIOS AUSENTES', '😴')}
+            
+            {/* Sección de perfil de usuario integrada */}
+            {currentUser && (
+                <div className="user-profile-section-integrated">
+                    <div 
+                        className="user-profile-info-clickable"
+                        onClick={() => setShowStatusPopup(!showStatusPopup)}
+                    >
+                        <div className="profile-avatar">
+                            {getAvatarInitial(currentUser.username || currentUser.name)}
+                        </div>
+                        <div className="profile-details">
+                            <h4>{currentUser.username || currentUser.name || 'Usuario'}</h4>
+                            <span className="profile-status">
+                                {getStatusText(currentUser.status)}
+                            </span>
+                        </div>
+                        <div className="profile-actions">
+                            <span className="status-indicator" style={{ color: getStatusColor(currentUser.status) }}>
+                                ●
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {/* Popup de cambio de estado */}
+                    <AnimatePresence>
+                        {showStatusPopup && (
+                            <motion.div 
+                                className="status-popup"
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <div className="popup-header">
+                                    <h4>Cambiar estado</h4>
+                                </div>
+                                <div className="status-options">
+                                    {onStatusChange && (
+                                        <>
+                                            <button 
+                                                className={`status-option ${currentUser.status === 'online' ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    onStatusChange('online');
+                                                    setShowStatusPopup(false);
+                                                }}
+                                            >
+                                                <span className="status-dot online">●</span>
+                                                <span>En línea</span>
+                                            </button>
+                                            <button 
+                                                className={`status-option ${currentUser.status === 'away' ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    onStatusChange('away');
+                                                    setShowStatusPopup(false);
+                                                }}
+                                            >
+                                                <span className="status-dot away">●</span>
+                                                <span>Ausente</span>
+                                            </button>
+                                        </>
+                                    )}
+                                    {onLogout && (
+                                        <button 
+                                            className="logout-option"
+                                            onClick={() => {
+                                                onLogout();
+                                                setShowStatusPopup(false);
+                                            }}
+                                        >
+                                            <span>🚪</span>
+                                            <span>Cerrar sesión</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
         </div>
     );
 }; 

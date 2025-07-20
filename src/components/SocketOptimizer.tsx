@@ -12,16 +12,22 @@ export const SocketOptimizer: React.FC<SocketOptimizerProps> = ({ children }) =>
   useEffect(() => {
     // Optimizaciones adicionales para Socket.io
     const optimizeSocketIO = () => {
+      // Determinar la URL del servidor basado en el entorno
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const serverUrl = isLocalhost ? 'http://localhost:3001' : 'https://tic-tac-toe-ai-production-13d0.up.railway.app';
+      
+      console.log('🔍 DEBUG: SocketOptimizer usando URL:', serverUrl);
+      
       // 1. Precargar DNS para el servidor de Socket.io
       const link = document.createElement('link');
       link.rel = 'dns-prefetch';
-      link.href = 'https://tic-tac-toe-ai-production-13d0.up.railway.app';
+      link.href = serverUrl;
       document.head.appendChild(link);
 
       // 2. Precargar la conexión WebSocket
       const wsLink = document.createElement('link');
       wsLink.rel = 'preconnect';
-      wsLink.href = 'https://tic-tac-toe-ai-production-13d0.up.railway.app';
+      wsLink.href = serverUrl;
       wsLink.crossOrigin = 'anonymous';
       document.head.appendChild(wsLink);
 
@@ -37,7 +43,7 @@ export const SocketOptimizer: React.FC<SocketOptimizerProps> = ({ children }) =>
       // 4. Precargar recursos críticos de Socket.io
       const preloadResources = [
         'https://cdn.socket.io/4.8.1/socket.io.min.js',
-        'https://tic-tac-toe-ai-production-13d0.up.railway.app/socket.io/'
+        serverUrl
       ];
 
       preloadResources.forEach(resource => {

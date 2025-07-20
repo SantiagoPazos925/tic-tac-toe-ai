@@ -4,7 +4,7 @@ import { DatabaseConfig, ServerConfig } from '../types/index.js';
 export const serverConfig: ServerConfig = {
     port: parseInt(process.env['PORT'] || '3001'),
     corsOrigins: [
-        "http://localhost:5173",
+        "http://localhost:3000",
         "https://tic-tac-toe-ai-ochre.vercel.app",
         "https://tic-tac-toe-ai-santiagopazos925.vercel.app",
         process.env['FRONTEND_URL']
@@ -22,10 +22,27 @@ export const databaseConfig: DatabaseConfig = {
 
 // Configuración de CORS
 export const corsOptions = {
-    origin: serverConfig.corsOrigins,
+    origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+        // Permitir requests sin origin (como aplicaciones móviles o Postman)
+        if (!origin) return callback(null, true);
+        
+        // En desarrollo, permitir cualquier origin localhost
+        if (serverConfig.environment === 'development' && origin.includes('localhost')) {
+            return callback(null, true);
+        }
+        
+        // En producción, verificar contra la lista de origins permitidos
+        if (serverConfig.corsOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        callback(new Error('No permitido por CORS'));
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 };
 
 // Configuración de Socket.IO

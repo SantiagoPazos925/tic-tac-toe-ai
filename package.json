@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config vite.config.dev.ts",
     "dev:server": "cd server && npm run dev",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "tsc --project tsconfig.json --noEmit && vite build",

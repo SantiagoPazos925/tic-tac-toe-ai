@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chat - Socket.io</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+        button {
+            background: #5865f2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4752c4;
+        }
+        input {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px;
+            border-radius: 4px;
+            width: 300px;
+            margin: 5px;
+        }
+        .chat-area {
+            background: #333;
+            padding: 15px;
+            border-radius: 4px;
+            height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+            border: 1px solid #555;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background: #444;
+        }
+        .system-message {
+            background: #2d5a2d;
+            color: #90EE90;
+        }
+        .user-message {
+            background: #444;
+        }
+        pre {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test de Chat - Socket.io</h1>
+    
+    <div class="test-section">
+        <h2>1. Conexión Socket.io</h2>
+        <input type="text" id="username" placeholder="Nombre de usuario" value="TestUser">
+        <button onclick="connectSocket()">Conectar</button>
+        <button onclick="disconnectSocket()">Desconectar</button>
+        <div id="connection-status">No conectado</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Chat</h2>
+        <div class="chat-area" id="chat-messages">
+            <div class="message system-message">Sistema: Esperando conexión...</div>
+        </div>
+        <input type="text" id="message-input" placeholder="Escribe un mensaje..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Enviar Mensaje</button>
+        <button onclick="clearChat()">Limpiar Chat</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Logs de Debug</h2>
+        <div id="debug-logs" style="height: 200px; overflow-y: auto; background: #333; padding: 10px; border-radius: 4px;">
+            <div class="info">Esperando logs...</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('debug-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function updateConnectionStatus(status, type = 'info') {
+            const statusDiv = document.getElementById('connection-status');
+            statusDiv.innerHTML = `<span class="${type}">${status}</span>`;
+        }
+
+        function addChatMessage(content, type = 'user-message') {
+            const chatDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = content;
+            chatDiv.appendChild(messageDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function connectSocket() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                alert('Por favor ingresa un nombre de usuario');
+                return;
+            }
+
+            log('Conectando a Socket.io...', 'info');
+            updateConnectionStatus('Conectando...', 'info');
+
+            // Determinar la URL del servidor
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const serverUrl = isLocalhost ? 'http://localhost:3001' : 'https://tic-tac-toe-ai-production-13d0.up.railway.app';
+            
+            log(`Usando servidor: ${serverUrl}`, 'info');
+
+            socket = io(serverUrl, {
+                transports: ['websocket', 'polling'],
+                timeout: 5000
+            });
+
+            socket.on('connect', () => {
+                log('✅ Socket conectado exitosamente', 'success');
+                updateConnectionStatus('Conectado', 'success');
+                isConnected = true;
+
+                // Unirse al lobby
+                log(`Uniéndose al lobby como: ${username}`, 'info');
+                socket.emit('join-lobby', { name: username });
+            });
+
+            socket.on('disconnect', (reason) => {
+                log(`❌ Socket desconectado: ${reason}`, 'error');
+                updateConnectionStatus('Desconectado', 'error');
+                isConnected = false;
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`❌ Error de conexión: ${error.message}`, 'error');
+                updateConnectionStatus('Error de conexión', 'error');
+                isConnected = false;
+            });
+
+            socket.on('chat-message', (message) => {
+                log(`📨 Mensaje recibido: ${JSON.stringify(message)}`, 'info');
+                addChatMessage(`${message.username || 'Sistema'}: ${message.content}`, 
+                    message.type === 'system' ? 'system-message' : 'user-message');
+            });
+
+            socket.on('users-list', (users) => {
+                log(`👥 Lista de usuarios recibida: ${users.length} usuarios`, 'info');
+                addChatMessage(`Sistema: ${users.length} usuarios conectados`, 'system-message');
+            });
+
+            socket.on('user-joined', (user) => {
+                log(`👋 Usuario unido: ${user.name}`, 'info');
+                addChatMessage(`Sistema: ${user.name} se unió al chat`, 'system-message');
+            });
+
+            socket.on('user-left', (user) => {
+                log(`👋 Usuario salió: ${user.name}`, 'info');
+                addChatMessage(`Sistema: ${user.name} salió del chat`, 'system-message');
+            });
+
+            socket.on('error', (error) => {
+                log(`❌ Error del servidor: ${error.message}`, 'error');
+                addChatMessage(`Error: ${error.message}`, 'system-message');
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                isConnected = false;
+                log('Socket desconectado manualmente', 'info');
+                updateConnectionStatus('Desconectado', 'info');
+            }
+        }
+
+        function sendMessage() {
+            if (!isConnected || !socket) {
+                alert('No estás conectado');
+                return;
+            }
+
+            const messageInput = document.getElementById('message-input');
+            const content = messageInput.value.trim();
+            
+            if (!content) {
+                alert('Por favor escribe un mensaje');
+                return;
+            }
+
+            log(`📤 Enviando mensaje: "${content}"`, 'info');
+            
+            // Enviar mensaje con el formato correcto
+            socket.emit('send-message', { content: content });
+            
+            messageInput.value = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function clearChat() {
+            const chatDiv = document.getElementById('chat-messages');
+            chatDiv.innerHTML = '<div class="message system-message">Sistema: Chat limpiado</div>';
+        }
+
+        // Auto-conectar al cargar la página
+        window.onload = () => {
+            log('Página cargada, listo para conectar', 'info');
+        };
+    </script>
+</body>
+</html> 

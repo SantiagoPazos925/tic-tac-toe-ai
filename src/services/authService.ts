@@ -1,11 +1,21 @@
-import { AuthUser, AuthForm, AuthResponse } from '../types';
+import { AuthForm, AuthResponse, AuthUser } from '../types';
 // import { ApiResponse } from '../types'; // Para uso futuro
 
 class AuthService {
     private baseUrl: string;
 
     constructor() {
-        this.baseUrl = import.meta.env['VITE_API_URL'] || 'http://localhost:3001';
+        // FORZAR localhost:3001 en desarrollo
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            this.baseUrl = 'http://localhost:3001';
+            console.log('🔍 DEBUG: Modo desarrollo detectado, usando localhost:3001');
+        } else {
+            // En producción, usar la variable de entorno
+            this.baseUrl = import.meta.env['VITE_API_URL'] || 'http://localhost:3001';
+            console.log('🔍 DEBUG: Modo producción, usando:', this.baseUrl);
+        }
+        
+        console.log('🔍 DEBUG: AuthService usando URL:', this.baseUrl);
     }
 
     // Login

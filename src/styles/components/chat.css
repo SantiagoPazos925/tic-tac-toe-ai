@@ -5,29 +5,57 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: var(--discord-bg);
+    background: linear-gradient(135deg, var(--discord-bg) 0%, rgba(26, 27, 30, 0.95) 100%);
     min-height: 0;
     overflow: hidden;
+    position: relative;
+}
+
+.chat-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 80%, rgba(88, 101, 242, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(87, 242, 135, 0.02) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 /* Header del chat */
 .chat-header {
-    background: var(--discord-secondary);
+    background: linear-gradient(135deg, var(--discord-secondary) 0%, rgba(44, 47, 51, 0.95) 100%);
     border-bottom: 1px solid var(--discord-border);
-    padding: var(--spacing-md) var(--spacing-xl);
+    padding: 1rem 1.5rem;
     flex-shrink: 0;
     transition: all var(--transition-normal);
+    position: relative;
+    z-index: 1;
 }
 
 .chat-header h2 {
     color: var(--discord-text-primary);
     margin: 0;
-    font-size: var(--font-size-lg);
+    font-size: 1.125rem;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 0.75rem;
     transition: all var(--transition-normal);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header h2::before {
+    content: '💬';
+    font-size: 1.25rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    animation: chatBounce 3s ease-in-out infinite;
+}
+
+@keyframes chatBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
 }
 
 /* Sección de mensajes del sistema */
@@ -145,20 +173,39 @@
 .chat-message {
     display: flex;
     align-items: flex-start;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--discord-secondary);
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
     border-radius: var(--border-radius-md);
-    border: 1px solid var(--discord-border);
+    border: 1px solid transparent;
     transition: all var(--transition-normal);
     animation: fadeIn var(--transition-slow) ease-out;
+    position: relative;
+    backdrop-filter: blur(10px);
 }
 
 .chat-message:hover {
-    background: var(--discord-hover);
-    border-color: var(--discord-accent);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(88, 101, 242, 0.2);
     transform: translateY(-1px);
-    box-shadow: var(--discord-shadow-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.chat-message::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--discord-accent);
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.chat-message:hover::before {
+    opacity: 0.8;
 }
 
 .message-sender {
@@ -186,28 +233,32 @@
 
 /* Formulario de chat */
 .chat-input-form {
-    background: var(--discord-secondary);
+    background: linear-gradient(135deg, var(--discord-secondary) 0%, rgba(44, 47, 51, 0.95) 100%);
     border-top: 1px solid var(--discord-border);
-    padding: var(--spacing-lg) var(--spacing-xl);
+    padding: 1rem 1.5rem;
     display: flex;
-    gap: var(--spacing-md);
+    gap: 0.75rem;
     flex-shrink: 0;
     align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
 /* Input del chat */
 .chat-input {
     flex: 1;
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 0.75rem 1rem;
     border: 1px solid var(--discord-border);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--discord-input-bg);
+    border-radius: var(--border-radius-md);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--discord-text-primary);
-    font-size: 17px;
+    font-size: 0.875rem;
     font-family: var(--font-family-emoji);
     outline: none;
     transition: all var(--transition-normal);
-    min-height: var(--input-height);
+    min-height: 44px;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--discord-shadow);
 }
 
 .chat-input::placeholder {
@@ -221,27 +272,45 @@
 
 /* Botón de enviar */
 .send-button {
-    background: var(--discord-accent);
+    background: linear-gradient(135deg, var(--discord-accent) 0%, var(--discord-accent-hover) 100%);
     color: white;
     border: none;
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-md);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--border-radius-md);
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
-    min-height: var(--button-height);
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 80px;
+    box-shadow: var(--discord-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.send-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
 }
 
 .send-button:hover {
-    background: var(--discord-accent-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--discord-shadow-hover);
+    background: linear-gradient(135deg, var(--discord-accent-hover) 0%, var(--discord-accent) 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--discord-shadow-hover), var(--discord-glow);
+}
+
+.send-button:hover::before {
+    left: 100%;
 }
 
 .send-button:active {

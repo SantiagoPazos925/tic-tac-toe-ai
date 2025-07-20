@@ -147,11 +147,21 @@ export class LobbyService {
 
     // Enviar mensaje del chat
     sendMessage(socketId: string, content: string): ChatMessage | null {
+        Logger.lobby(`🔍 DEBUG: sendMessage llamado con socketId: ${socketId}, content: "${content}"`);
+        Logger.lobby(`🔍 DEBUG: Usuarios conectados actualmente: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
+        
         const user = this.connectedUsers.get(socketId);
-        if (!user) return null;
+        if (!user) {
+            Logger.lobby(`🔍 DEBUG: Usuario no encontrado para socket ${socketId}`);
+            Logger.lobby(`🔍 DEBUG: Total de usuarios conectados: ${this.connectedUsers.size}`);
+            return null;
+        }
+
+        Logger.lobby(`🔍 DEBUG: Procesando mensaje de ${user.name}: "${content}"`);
 
         try {
             const validatedContent = validateChatMessage(content);
+            Logger.lobby(`🔍 DEBUG: Mensaje validado exitosamente: "${validatedContent}"`);
 
             const chatMessage: ChatMessage = {
                 id: Date.now().toString(),
@@ -162,12 +172,14 @@ export class LobbyService {
             };
 
             this.addChatMessage(chatMessage);
-            Logger.lobby(`Mensaje de ${user.name}: ${validatedContent}`);
+            Logger.lobby(`✅ Mensaje de ${user.name}: ${validatedContent}`);
 
             return chatMessage;
         } catch (error) {
             if (error instanceof ValidationError) {
-                Logger.warn(`Mensaje inválido de ${user.name}: ${content}`);
+                Logger.warn(`❌ Mensaje inválido de ${user.name}: "${content}" - Error: ${error.message}`);
+            } else {
+                Logger.error(`❌ Error inesperado procesando mensaje de ${user.name}:`, error);
             }
             return null;
         }

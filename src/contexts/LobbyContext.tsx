@@ -26,6 +26,7 @@ interface LobbyContextType {
   // Funciones
   setNewMessage: (message: string) => void;
   sendMessage: () => void;
+  handleSendMessage: (e: React.FormEvent) => void;
   toggleStatusMenu: () => void;
   handleStatusChange: (status: string) => void;
   handleUserContextMenu: (e: React.MouseEvent, user: User) => void;
@@ -40,6 +41,7 @@ interface LobbyContextType {
   // Socket service
   socketService: any;
   sendPing: () => void;
+  disconnect: () => void;
 }
 
 const LobbyContext = createContext<LobbyContextType | undefined>(undefined);
@@ -67,7 +69,8 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     userMessages, 
     systemMessages, 
     socketService, 
-    sendPing 
+    sendPing,
+    disconnect
   } = useLobbySocket();
 
   // Estado local
@@ -87,6 +90,15 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
   // Funciones
   const sendMessage = useCallback(() => {
     if (newMessage.trim() && authUser) {
+      socketService.sendMessage(newMessage.trim());
+      setNewMessage('');
+    }
+  }, [newMessage, authUser, socketService]);
+
+  const handleSendMessage = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (newMessage.trim() && authUser) {
+      console.log('🔍 DEBUG: Enviando mensaje desde handleSendMessage:', newMessage.trim());
       socketService.sendMessage(newMessage.trim());
       setNewMessage('');
     }
@@ -161,6 +173,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     // Funciones
     setNewMessage,
     sendMessage,
+    handleSendMessage,
     toggleStatusMenu,
     handleStatusChange,
     handleUserContextMenu,
@@ -174,7 +187,8 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     
     // Socket service
     socketService,
-    sendPing
+    sendPing,
+    disconnect
   };
 
   return (

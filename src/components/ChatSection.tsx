@@ -27,7 +27,7 @@ export const ChatSection = ({
     return (
         <div className="chat-section">
             <div className="chat-header">
-                <h2>💬 Chat del Lobby</h2>
+                <h2>Chat del Lobby</h2>
             </div>
 
             <div className="chat-messages">

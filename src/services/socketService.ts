@@ -7,10 +7,25 @@ class SocketService {
     //private eventListeners: Map<string, Function[]> = new Map();
 
     constructor() {
-        this.baseUrl = import.meta.env['VITE_API_URL'] || 'http://localhost:3001';
+        // FORZAR localhost:3001 en desarrollo
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            this.baseUrl = 'http://localhost:3001';
+            console.log('🔍 DEBUG: Modo desarrollo detectado, usando localhost:3001');
+        } else {
+            // En producción, usar la variable de entorno
+            this.baseUrl = import.meta.env['VITE_API_URL'] || 'http://localhost:3001';
+            console.log('🔍 DEBUG: Modo producción, usando:', this.baseUrl);
+        }
+        
+        console.log('🔍 DEBUG: SocketService usando URL:', this.baseUrl);
     }
 
     connect(): Socket {
+        console.log('🔍 DEBUG: SocketService.connect() llamado');
+        console.log('🔍 DEBUG: import.meta.env.DEV =', import.meta.env.DEV);
+        console.log('🔍 DEBUG: import.meta.env.VITE_API_URL =', import.meta.env['VITE_API_URL']);
+        console.log('🔍 DEBUG: this.baseUrl =', this.baseUrl);
+        
         if (this.socket && this.socket.connected) {
             console.log('🔍 DEBUG: Socket ya conectado, retornando conexión existente');
             return this.socket;
@@ -71,8 +86,15 @@ class SocketService {
 
     // Eventos del lobby
     joinLobby(name: string): void {
+        console.log('🔍 DEBUG: socketService.joinLobby llamado con:', name);
+        console.log('🔍 DEBUG: Socket existe:', !!this.socket);
+        console.log('🔍 DEBUG: Socket conectado:', this.socket?.connected);
+        
         if (this.socket) {
+            console.log('🔍 DEBUG: Enviando join-lobby con datos:', { name });
             this.socket.emit('join-lobby', { name });
+        } else {
+            console.error('🔍 DEBUG: No hay socket disponible para joinLobby');
         }
     }
 
@@ -85,7 +107,11 @@ class SocketService {
     // Eventos del chat
     sendMessage(content: string): void {
         if (this.socket) {
-            this.socket.emit('send-message', { content });
+            const trimmedContent = content.trim();
+            console.log('🔍 DEBUG: Enviando mensaje:', { content: trimmedContent });
+            
+            // El servidor espera solo { content: string }
+            this.socket.emit('send-message', { content: trimmedContent });
         }
     }
 

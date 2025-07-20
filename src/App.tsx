@@ -1,15 +1,14 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthForm } from './components/AuthForm';
 import { ChatSection } from './components/ChatSection';
-import { CriticalResourcePreloader } from './components/CriticalResourcePreloader';
 import { LazySocketLoader } from './components/LazySocketLoader';
 import { LobbyHeader } from './components/LobbyHeader';
 import { MobileNavigation } from './components/MobileNavigation';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { ResourcePreloader } from './components/ResourcePreloader';
 import { SocketStatusIndicator } from './components/SocketOptimizer';
 import { SystemMessages } from './components/SystemMessages';
 import { UserContextMenu } from './components/UserContextMenu';
+
 import { UsersList } from './components/UsersList';
 import { useAuthContext } from './contexts/AuthContext';
 import { useLobbyContext } from './contexts/LobbyContext';
@@ -18,29 +17,35 @@ import Logger from './utils/logger';
 import { optimizePerformance } from './utils/performance';
 
 // Componentes de carga diferida para móviles
-const LazyVirtualizationDemo = React.lazy(() => import('./components/VirtualizationDemo').then(module => ({ default: module.VirtualizationDemo })));
-const LazyImageOptimizationDemo = React.lazy(() => import('./components/ImageOptimizationDemo').then(module => ({ default: module.ImageOptimizationDemo })));
+// const LazyVirtualizationDemo = React.lazy(() => import('./components/VirtualizationDemo').then(module => ({ default: module.VirtualizationDemo })));
+// const LazyImageOptimizationDemo = React.lazy(() => import('./components/ImageOptimizationDemo').then(module => ({ default: module.ImageOptimizationDemo })));
 
 const App: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuthContext();
+  const { isAuthenticated, isLoading, authUser } = useAuthContext();
   const {
     isConnected,
     ping,
     users,
+    currentUser,
     messages,
     systemMessages,
     newMessage,
+    showStatusMenu,
     showUserContextMenu,
     contextMenuUser,
     contextMenuPosition,
     setNewMessage,
-    sendMessage,
+    handleSendMessage,
+    toggleStatusMenu,
+    handleStatusChange,
     handleUserContextMenu,
     closeUserContextMenu,
     handleUserAction,
+    handleLogout,
     chatEndRef,
     systemMessagesEndRef,
-    sendPing
+    sendPing,
+    socketService
   } = useLobbyContext();
 
   const [isMobile, setIsMobile] = useState(false);
@@ -107,9 +112,17 @@ const App: React.FC = () => {
       isConnected,
       usersCount: users.length,
       messagesCount: messages.length,
+      currentUser: currentUser?.username,
       isMobile
     });
-  }, [isAuthenticated, isConnected, users.length, messages.length, isMobile]);
+    
+    // Debug: Verificar usuarios
+    if (users.length > 0) {
+      Logger.info('Usuarios disponibles:', users.map(u => ({ username: u.username, status: u.status })));
+    } else {
+      Logger.info('No hay usuarios en la lista');
+    }
+  }, [isAuthenticated, isConnected, users.length, messages.length, currentUser, isMobile]);
 
   if (isLoading) {
     return (
@@ -166,33 +179,62 @@ const App: React.FC = () => {
         {/* Contenido principal */}
         <main className="main-content">
           <div className="lobby-container">
-            {/* Lista de usuarios */}
-            <aside className="users-sidebar">
-              <UsersList
-                users={users}
-                onUserContextMenu={handleUserContextMenu}
-              />
+            {/* Columna de canales (izquierda) */}
+            <aside className="channels-sidebar">
+              <div className="channels-header">
+                <h3>Canales</h3>
+              </div>
+              <div className="channels-list">
+                <div className="channel-item active">
+                  <span className="channel-icon">💬</span>
+                  <span className="channel-name">General</span>
+                </div>
+                <div className="channel-item">
+                  <span className="channel-icon">🎮</span>
+                  <span className="channel-name">Juegos</span>
+                </div>
+                <div className="channel-item">
+                  <span className="channel-icon">🤖</span>
+                  <span className="channel-name">IA</span>
+                </div>
+                <div className="channel-item">
+                  <span className="channel-icon">💻</span>
+                  <span className="channel-name">Tecnología</span>
+                </div>
+              </div>
             </aside>
 
-            {/* Sección de chat */}
+            {/* Sección de chat (centro) */}
             <section className="chat-section">
+              {/* Mensajes del sistema en la parte superior */}
+              <SystemMessages
+                messages={systemMessages}
+                systemMessagesEndRef={systemMessagesEndRef}
+              />
+              
               <ChatSection
                 messages={messages}
                 newMessage={newMessage}
                 setNewMessage={setNewMessage}
-                handleSendMessage={sendMessage}
+                handleSendMessage={handleSendMessage}
                 chatEndRef={chatEndRef}
               />
             </section>
+
+            {/* Lista de usuarios (derecha) */}
+            <aside className="users-sidebar">
+              <UsersList
+                users={users}
+                onUserContextMenu={handleUserContextMenu}
+                onStatusChange={handleStatusChange}
+                onLogout={handleLogout}
+                currentUser={currentUser}
+              />
+            </aside>
           </div>
 
-          {/* Mensajes del sistema */}
-          <SystemMessages
-            messages={systemMessages}
-            systemMessagesEndRef={systemMessagesEndRef}
-          />
-
-          {/* Demos de optimización (solo en desktop) */}
+          {/* Demos de optimización (OCULTOS) */}
+          {/* 
           {!isMobile && (
             <>
               <Suspense fallback={<div>Cargando demo de virtualización...</div>}>
@@ -204,13 +246,16 @@ const App: React.FC = () => {
               </Suspense>
             </>
           )}
+          */}
 
           {/* Indicador offline */}
           <OfflineIndicator />
 
-          {/* Preloaders de recursos */}
+          {/* Preloaders de recursos (OCULTOS) */}
+          {/* 
           <ResourcePreloader />
           <CriticalResourcePreloader />
+          */}
         </main>
 
         {/* Menú contextual de usuario */}
@@ -227,6 +272,10 @@ const App: React.FC = () => {
         {import.meta.env.DEV && (
           <SocketStatusIndicator />
         )}
+
+
+
+
       </div>
     </LazySocketLoader>
   );

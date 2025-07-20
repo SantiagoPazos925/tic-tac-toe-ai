@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conexión Local</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+        button {
+            background: #5865f2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4752c4;
+        }
+        pre {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test de Conexión Local</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Backend (localhost:3001)</h2>
+        <button onclick="testBackend()">Probar Backend</button>
+        <div id="backend-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Socket.io (localhost:3001)</h2>
+        <button onclick="testSocket()">Probar Socket.io</button>
+        <div id="socket-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Frontend (localhost:3000)</h2>
+        <button onclick="testFrontend()">Probar Frontend</button>
+        <div id="frontend-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Instrucciones</h2>
+        <div class="info">
+            <p><strong>Si todos los tests pasan:</strong></p>
+            <ol>
+                <li>Abre <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></li>
+                <li>Presiona <strong>Ctrl+Shift+R</strong> para hard refresh</li>
+                <li>Abre DevTools (F12) y ve a la pestaña Console</li>
+                <li>Busca el mensaje: <code>"🔍 DEBUG: Modo desarrollo detectado, usando localhost:3001"</code></li>
+                <li>No debe haber errores de CORS</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const result = document.getElementById('backend-result');
+            result.innerHTML = '<span class="info">Probando...</span>';
+            
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Backend funcionando correctamente</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${response.status}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error de conexión: ${error.message}</span>`;
+            }
+        }
+        
+        async function testSocket() {
+            const result = document.getElementById('socket-result');
+            result.innerHTML = '<span class="info">Probando Socket.io...</span>';
+            
+            try {
+                // Cargar Socket.io dinámicamente
+                const script = document.createElement('script');
+                script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+                script.onload = () => {
+                    const socket = io('http://localhost:3001');
+                    
+                    socket.on('connect', () => {
+                        result.innerHTML = `
+                            <span class="success">✅ Socket.io conectado correctamente</span>
+                            <p>Socket ID: ${socket.id}</p>
+                        `;
+                        socket.disconnect();
+                    });
+                    
+                    socket.on('connect_error', (error) => {
+                        result.innerHTML = `<span class="error">❌ Error de Socket.io: ${error.message}</span>`;
+                    });
+                    
+                    // Timeout después de 5 segundos
+                    setTimeout(() => {
+                        if (socket.connected === false) {
+                            result.innerHTML = `<span class="error">❌ Timeout: Socket.io no se conectó en 5 segundos</span>`;
+                        }
+                    }, 5000);
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        async function testFrontend() {
+            const result = document.getElementById('frontend-result');
+            result.innerHTML = '<span class="info">Probando Frontend...</span>';
+            
+            try {
+                const response = await fetch('http://localhost:3000');
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Frontend funcionando correctamente</span>
+                        <p>Status: ${response.status}</p>
+                        <p>URL: <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${response.status}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error de conexión: ${error.message}</span>`;
+            }
+        }
+        
+        // Auto-test al cargar la página
+        window.onload = () => {
+            setTimeout(() => {
+                testBackend();
+                setTimeout(() => testFrontend(), 1000);
+            }, 500);
+        };
+    </script>
+</body>
+</html> 

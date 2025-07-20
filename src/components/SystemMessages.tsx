@@ -17,7 +17,7 @@ export const SystemMessages = ({ messages, systemMessagesEndRef }: SystemMessage
     return (
         <div className="system-messages-section">
             <div className="system-messages">
-                <h4 className="system-messages-title">📢 Información del Sistema</h4>
+                <h4 className="system-messages-title">Información del Sistema</h4>
                 {systemMessages.map(message => (
                     <motion.div
                         key={message.id}

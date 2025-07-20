@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Mensajes</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .log {
+            background-color: #000;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .info { color: #74c0fc; }
+        .warning { color: #ffd43b; }
+        input, button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+        }
+        input {
+            background-color: #404040;
+            color: #ffffff;
+            width: 300px;
+        }
+        button {
+            background-color: #007bff;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .connected { background-color: #28a745; }
+        .disconnected { background-color: #dc3545; }
+        .connecting { background-color: #ffc107; color: #000; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test de Mensajes - Debug</h1>
+    
+    <div class="container">
+        <h3>Estado de Conexión</h3>
+        <div id="status" class="status disconnected">Desconectado</div>
+        <button onclick="connect()">Conectar</button>
+        <button onclick="disconnect()">Desconectar</button>
+    </div>
+
+    <div class="container">
+        <h3>Enviar Mensaje</h3>
+        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." value="hola">
+        <button onclick="sendMessage()">Enviar</button>
+        <button onclick="sendEmptyMessage()">Enviar Mensaje Vacío</button>
+        <button onclick="sendInvalidMessage()">Enviar Mensaje Inválido</button>
+    </div>
+
+    <div class="container">
+        <h3>Logs</h3>
+        <button onclick="clearLogs()">Limpiar Logs</button>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logs.appendChild(logEntry);
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function updateStatus(status, className) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = status;
+            statusDiv.className = `status ${className}`;
+        }
+
+        function connect() {
+            log('🔌 Intentando conectar...', 'info');
+            updateStatus('Conectando...', 'connecting');
+
+            // Determinar URL del servidor
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const serverUrl = isLocalhost ? 'http://localhost:3001' : 'https://tic-tac-toe-ai-production-13d0.up.railway.app';
+            
+            log(`🌐 Conectando a: ${serverUrl}`, 'info');
+
+            socket = io(serverUrl, {
+                autoConnect: true,
+                timeout: 20000,
+                transports: ['websocket', 'polling'],
+                upgrade: true,
+                rememberUpgrade: true,
+                forceNew: true
+            });
+
+            socket.on('connect', () => {
+                log(`✅ Conectado con ID: ${socket.id}`, 'success');
+                updateStatus('Conectado', 'connected');
+                isConnected = true;
+            });
+
+            socket.on('disconnect', (reason) => {
+                log(`❌ Desconectado: ${reason}`, 'error');
+                updateStatus('Desconectado', 'disconnected');
+                isConnected = false;
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`❌ Error de conexión: ${error.message}`, 'error');
+                updateStatus('Error de conexión', 'disconnected');
+                isConnected = false;
+            });
+
+            socket.on('chat-message', (message) => {
+                log(`📨 Mensaje recibido: ${JSON.stringify(message)}`, 'success');
+            });
+
+            socket.on('error', (error) => {
+                log(`❌ Error del servidor: ${error.message}`, 'error');
+            });
+
+            socket.on('users-list', (users) => {
+                log(`👥 Lista de usuarios: ${users.length} usuarios`, 'info');
+            });
+
+            socket.on('user-joined', (user) => {
+                log(`👋 Usuario unido: ${user.name}`, 'info');
+            });
+
+            socket.on('user-left', (user) => {
+                log(`👋 Usuario salió: ${user.name}`, 'info');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('🔌 Desconectado manualmente', 'warning');
+                updateStatus('Desconectado', 'disconnected');
+                isConnected = false;
+            }
+        }
+
+        function sendMessage() {
+            if (!socket || !isConnected) {
+                log('❌ No hay conexión activa', 'error');
+                return;
+            }
+
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value.trim();
+            
+            log(`📤 Enviando mensaje: "${content}"`, 'info');
+            log(`📤 Estructura del mensaje: { content: "${content}" }`, 'info');
+            
+            // Simular exactamente lo que hace el cliente
+            socket.emit('send-message', { content: content });
+        }
+
+        function sendEmptyMessage() {
+            if (!socket || !isConnected) {
+                log('❌ No hay conexión activa', 'error');
+                return;
+            }
+
+            log('📤 Enviando mensaje vacío', 'warning');
+            log('📤 Estructura del mensaje: { content: "" }', 'warning');
+            
+            socket.emit('send-message', { content: '' });
+        }
+
+        function sendInvalidMessage() {
+            if (!socket || !isConnected) {
+                log('❌ No hay conexión activa', 'error');
+                return;
+            }
+
+            log('📤 Enviando mensaje inválido (null)', 'warning');
+            log('📤 Estructura del mensaje: null', 'warning');
+            
+            socket.emit('send-message', null);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        // Auto-conectar al cargar la página
+        window.addEventListener('load', () => {
+            log('🚀 Página cargada, iniciando test...', 'info');
+            connect();
+        });
+    </script>
+</body>
+</html> 

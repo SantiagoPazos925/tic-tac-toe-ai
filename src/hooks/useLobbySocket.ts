@@ -46,6 +46,9 @@ export const useLobbySocket = () => {
         socketService.onConnect(() => {
             Logger.socket('Evento connect recibido en useSocket');
             setIsConnected(true);
+            // Resetear flags cuando se conecta
+            setHasJoinedLobby(false);
+            setIsJoiningLobby(false);
             // NO unirse al lobby aquí - se maneja en el useEffect
         });
 
@@ -58,32 +61,7 @@ export const useLobbySocket = () => {
         });
 
         // Eventos de usuarios
-        socketService.onUsersList((usersList: any[]) => {
-            Logger.socket('Lista de usuarios recibida:', usersList);
-            // Mapear LobbyUser del backend a User del frontend
-            const mappedUsers: User[] = usersList.map(user => {
-                // Convertir fechas de string a Date si es necesario
-                const joinDate = user.joinedAt ? 
-                    (typeof user.joinedAt === 'string' ? new Date(user.joinedAt) : user.joinedAt) : 
-                    new Date();
-                
-                const lastSeen = user.lastSeen ? 
-                    (typeof user.lastSeen === 'string' ? new Date(user.lastSeen) : user.lastSeen) : 
-                    new Date();
 
-                return {
-                    id: user.id,
-                    username: user.name, // LobbyUser usa 'name', User usa 'username'
-                    email: '', // No disponible en LobbyUser
-                    status: user.status,
-                    lastSeen: lastSeen,
-                    isOnline: user.status === 'online',
-                    joinDate: joinDate, // LobbyUser usa 'joinedAt', User usa 'joinDate'
-                    name: user.name // Para compatibilidad
-                };
-            });
-            setUsers(mappedUsers);
-        });
 
         socketService.onUserJoined((user: any) => {
             Logger.socket('Usuario unido:', user);
@@ -159,6 +137,41 @@ export const useLobbySocket = () => {
         socketService.onChatMessage((message: ChatMessage) => {
             Logger.socket('Mensaje de chat recibido:', message);
             setChatMessages(prev => [...prev, message]);
+        });
+
+        // Evento para confirmar que el usuario se unió al lobby
+        socketService.onUsersList((usersList: any[]) => {
+            Logger.socket('Lista de usuarios recibida (confirmación de unión al lobby):', usersList);
+            // Si recibimos la lista de usuarios, significa que nos unimos exitosamente al lobby
+            if (authUser && usersList.some(user => user.name === authUser.username)) {
+                Logger.socket('🔍 DEBUG: Confirmado - usuario se unió exitosamente al lobby');
+                setHasJoinedLobby(true);
+                setIsJoiningLobby(false);
+            }
+            
+            // Mapear LobbyUser del backend a User del frontend
+            const mappedUsers: User[] = usersList.map(user => {
+                // Convertir fechas de string a Date si es necesario
+                const joinDate = user.joinedAt ? 
+                    (typeof user.joinedAt === 'string' ? new Date(user.joinedAt) : user.joinedAt) : 
+                    new Date();
+                
+                const lastSeen = user.lastSeen ? 
+                    (typeof user.lastSeen === 'string' ? new Date(user.lastSeen) : user.lastSeen) : 
+                    new Date();
+
+                return {
+                    id: user.id,
+                    username: user.name, // LobbyUser usa 'name', User usa 'username'
+                    email: '', // No disponible en LobbyUser
+                    status: user.status,
+                    lastSeen: lastSeen,
+                    isOnline: user.status === 'online',
+                    joinDate: joinDate, // LobbyUser usa 'joinedAt', User usa 'joinDate'
+                    name: user.name // Para compatibilidad
+                };
+            });
+            setUsers(mappedUsers);
         });
 
         // Eventos de ping
@@ -258,25 +271,45 @@ export const useLobbySocket = () => {
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
         
+        Logger.socket('🔍 DEBUG: useEffect de unión al lobby ejecutándose', {
+            authUser: authUser?.username,
+            isConnected,
+            hasJoinedLobby,
+            isJoiningLobby
+        });
+        
         if (authUser && isConnected && !hasJoinedLobby && !isJoiningLobby) {
-            Logger.socket('Usuario autenticado cambiado y conectado, uniéndose al lobby:', authUser.username);
+            Logger.socket('🔍 DEBUG: Condiciones cumplidas, uniéndose al lobby:', authUser.username);
             setHasJoinedLobby(true);
             setIsJoiningLobby(true);
             
             // Debounce para evitar múltiples uniones
             timeoutId = setTimeout(() => {
+                Logger.socket('🔍 DEBUG: Ejecutando joinLobby después del timeout');
                 socketService.joinLobby(authUser.username);
+                Logger.socket('🔍 DEBUG: joinLobby ejecutado, esperando respuesta del servidor');
                 // Resetear el flag después de un tiempo
-                setTimeout(() => setIsJoiningLobby(false), 1000);
+                setTimeout(() => {
+                    Logger.socket('🔍 DEBUG: Reseteando isJoiningLobby');
+                    setIsJoiningLobby(false);
+                }, 1000);
             }, 500); // Aumentar el delay para evitar uniones rápidas
+        } else {
+            Logger.socket('🔍 DEBUG: Condiciones NO cumplidas para unirse al lobby', {
+                tieneAuthUser: !!authUser,
+                isConnected,
+                hasJoinedLobby,
+                isJoiningLobby
+            });
         }
 
         return () => {
             if (timeoutId) {
+                Logger.socket('🔍 DEBUG: Limpiando timeout de unión al lobby');
                 clearTimeout(timeoutId);
             }
         };
-    }, [authUser, isConnected, hasJoinedLobby, isJoiningLobby]);
+    }, [authUser, isConnected]); // Removemos hasJoinedLobby e isJoiningLobby de las dependencias
 
     // Limpiar al desmontar
     useEffect(() => {

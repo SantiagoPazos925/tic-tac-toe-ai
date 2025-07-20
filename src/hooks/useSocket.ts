@@ -21,14 +21,20 @@ interface UseSocketReturn {
 }
 
 export const useSocket = (options: UseSocketOptions = {}): UseSocketReturn => {
+  // Determinar la URL del servidor basado en el entorno
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const defaultUrl = isLocalhost ? 'http://localhost:3001' : 'https://tic-tac-toe-ai-production-13d0.up.railway.app';
+  
   const {
-    url = import.meta.env['VITE_SOCKET_URL'] || 'https://tic-tac-toe-ai-production-13d0.up.railway.app',
+    url = import.meta.env['VITE_SOCKET_URL'] || defaultUrl,
     autoConnect = false,
     lazyConnect = true,
     retryAttempts = 3,
     retryDelay = 1000,
     timeout = 5000
   } = options;
+  
+  console.log('🔍 DEBUG: useSocket usando URL:', url);
 
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -110,7 +116,7 @@ export const useSocket = (options: UseSocketOptions = {}): UseSocketReturn => {
     });
 
     socketRef.current = socket;
-    return socket;
+        return socket;
   }, [url, timeout, retryAttempts, retryDelay]);
 
   // Función para conectar
@@ -125,15 +131,15 @@ export const useSocket = (options: UseSocketOptions = {}): UseSocketReturn => {
   }, [isConnected, isConnecting, createSocket]);
 
   // Función para desconectar
-  const disconnect = useCallback(() => {
+    const disconnect = useCallback(() => {
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
     }
-    setIsConnected(false);
+        setIsConnected(false);
     setIsConnecting(false);
     setError(null);
-  }, []);
+    }, []);
 
   // Función para reconectar
   const reconnect = useCallback(() => {
@@ -146,20 +152,20 @@ export const useSocket = (options: UseSocketOptions = {}): UseSocketReturn => {
   }, [disconnect, connect]);
 
   // Lazy connection - conectar solo cuando sea necesario
-  useEffect(() => {
+    useEffect(() => {
     if (!lazyConnect && autoConnect) {
       connect();
-    }
+        }
 
-    return () => {
+        return () => {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
-      }
-    };
+            }
+        };
   }, [lazyConnect, autoConnect, connect]);
 
   // Cleanup al desmontar
-  useEffect(() => {
+    useEffect(() => {
     return () => {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
@@ -170,9 +176,9 @@ export const useSocket = (options: UseSocketOptions = {}): UseSocketReturn => {
     };
   }, []);
 
-  return {
+    return {
     socket: socketRef.current,
-    isConnected,
+        isConnected,
     isConnecting,
     error,
     connect,
