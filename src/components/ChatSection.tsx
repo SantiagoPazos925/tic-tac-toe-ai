@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
 import { motion } from 'motion/react';
-import { ChatMessage } from '../types';
+import React, { useRef } from 'react';
+import { Message } from '../types';
 import { formatTime } from '../utils/formatters';
 import { EmojiPickerComponent } from './EmojiPicker';
+
+type ChatMessage = Message;
 
 interface ChatSectionProps {
     messages: ChatMessage[];
@@ -20,7 +22,7 @@ export const ChatSection = ({
     chatEndRef
 }: ChatSectionProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const userMessages = messages.filter(message => message.type === 'user');
+    const userMessages = messages.filter(message => message.type === 'text' || message.type === 'user');
 
     return (
         <div className="chat-section">
@@ -47,7 +49,7 @@ export const ChatSection = ({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <span className="message-sender">{message.sender}: </span>
+                            <span className="message-sender">{typeof message.sender === 'string' ? message.sender : message.sender?.username || 'Usuario'}: </span>
                             <span className="message-content">{message.content}</span>
                             <span className="message-timestamp">{formatTime(message.timestamp)}</span>
                         </motion.div>

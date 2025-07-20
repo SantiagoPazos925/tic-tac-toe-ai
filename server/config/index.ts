@@ -1,23 +1,23 @@
-import { ServerConfig, DatabaseConfig } from '../types/index.js';
+import { DatabaseConfig, ServerConfig } from '../types/index.js';
 
 // Configuración del servidor
 export const serverConfig: ServerConfig = {
-    port: parseInt(process.env.PORT || '3001'),
+    port: parseInt(process.env['PORT'] || '3001'),
     corsOrigins: [
         "http://localhost:5173",
         "https://tic-tac-toe-ai-ochre.vercel.app",
         "https://tic-tac-toe-ai-santiagopazos925.vercel.app",
-        process.env.FRONTEND_URL
+        process.env['FRONTEND_URL']
     ].filter(Boolean) as string[],
-    jwtSecret: process.env.JWT_SECRET || 'tu-secreto-super-seguro',
-    environment: process.env.NODE_ENV || 'development'
+    jwtSecret: process.env['JWT_SECRET'] || 'tu-secreto-super-seguro',
+    environment: process.env['NODE_ENV'] || 'development'
 };
 
 // Configuración de la base de datos
 export const databaseConfig: DatabaseConfig = {
-    isProduction: process.env.NODE_ENV === 'production',
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production'
+    isProduction: process.env['NODE_ENV'] === 'production',
+    connectionString: process.env['DATABASE_URL'] || '',
+    ssl: process.env['NODE_ENV'] === 'production'
 };
 
 // Configuración de CORS

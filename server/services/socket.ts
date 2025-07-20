@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
-import { LobbyService } from './lobby.js';
-import { Logger } from '../utils/logger.js';
 import { lobbyConfig } from '../config/index.js';
+import { Logger } from '../utils/logger.js';
+import { LobbyService } from './lobby.js';
 
 export class SocketService {
     private io: Server;
@@ -57,6 +57,13 @@ export class SocketService {
             Logger.socket(`🔍 DEBUG: Iniciando joinLobby para ${userData.name} con socket ${socket.id}`);
 
             const { user, disconnectedSocketId } = this.lobbyService.joinLobby(socket.id, userData.name);
+            
+            // Si el usuario ya está conectado con el mismo socket, no hacer nada
+            if (!user) {
+                Logger.socket(`🔍 DEBUG: Usuario ${userData.name} ya está conectado con socket ${socket.id}, ignorando`);
+                return;
+            }
+
             const isReconnection = this.lobbyService.checkReconnection(userData.name);
 
             Logger.socket(`🔍 DEBUG: joinLobby retornó - user: ${user.name}, disconnectedSocketId: ${disconnectedSocketId}, isReconnection: ${isReconnection}`);
@@ -89,31 +96,29 @@ export class SocketService {
                 Logger.socket(`🔍 DEBUG: No se encontró socket anterior para desconectar`);
             }
 
-            // Esperar un momento para asegurar que la desconexión anterior se complete
-            setTimeout(() => {
-                // Siempre crear mensaje del sistema cuando un usuario se une
-                const systemMessage = this.lobbyService.addSystemMessage(
-                    isReconnection
-                        ? `${userData.name} se reconectó al lobby`
-                        : `${userData.name} se unió al lobby`
-                );
-                Logger.socket(`📢 Enviando mensaje del sistema: ${systemMessage.content}`);
-                this.io.emit('chat-message', systemMessage);
+            // Enviar datos inmediatamente sin delay
+            // Crear mensaje del sistema cuando un usuario se une
+            const systemMessage = this.lobbyService.addSystemMessage(
+                isReconnection
+                    ? `${userData.name} se reconectó al lobby`
+                    : `${userData.name} se unió al lobby`
+            );
+            Logger.socket(`📢 Enviando mensaje del sistema: ${systemMessage.content}`);
+            this.io.emit('chat-message', systemMessage);
 
-                // Notificar a todos los usuarios sobre el nuevo usuario
-                this.io.emit('user-joined', user);
+            // Notificar a todos los usuarios sobre el nuevo usuario
+            this.io.emit('user-joined', user);
 
-                // Enviar lista actual de usuarios al nuevo usuario
-                const usersList = this.lobbyService.getConnectedUsers();
-                Logger.socket(`🔍 DEBUG: Enviando lista de usuarios (${usersList.length} usuarios): ${usersList.map(u => u.name).join(', ')}`);
-                socket.emit('users-list', usersList);
+            // Enviar lista actual de usuarios al nuevo usuario
+            const usersList = this.lobbyService.getConnectedUsers();
+            Logger.socket(`🔍 DEBUG: Enviando lista de usuarios (${usersList.length} usuarios): ${usersList.map(u => u.name).join(', ')}`);
+            socket.emit('users-list', usersList);
 
-                // Enviar historial del chat al nuevo usuario
-                const chatHistory = this.lobbyService.getChatHistory();
-                socket.emit('chat-history', chatHistory);
+            // Enviar historial del chat al nuevo usuario
+            const chatHistory = this.lobbyService.getChatHistory();
+            socket.emit('chat-history', chatHistory);
 
-                Logger.socket(`Usuario ${userData.name} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby`);
-            }, 100); // Pequeño delay para asegurar que la desconexión anterior se complete
+            Logger.socket(`Usuario ${userData.name} ${isReconnection ? 'se reconectó' : 'se unió'} al lobby`);
 
         } catch (error) {
             Logger.error('Error al unirse al lobby', error);

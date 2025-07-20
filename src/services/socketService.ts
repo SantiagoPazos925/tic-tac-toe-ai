@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { User, ChatMessage } from '../types';
+import { ChatMessage, User } from '../types';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -7,7 +7,7 @@ class SocketService {
     //private eventListeners: Map<string, Function[]> = new Map();
 
     constructor() {
-        this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        this.baseUrl = import.meta.env['VITE_API_URL'] || 'http://localhost:3001';
     }
 
     connect(): Socket {

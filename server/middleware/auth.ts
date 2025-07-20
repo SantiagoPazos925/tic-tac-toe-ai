@@ -4,25 +4,27 @@ import { AuthenticatedRequest } from '../types/index.js';
 import { Logger } from '../utils/logger.js';
 
 // Middleware para verificar token JWT
-export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
         Logger.auth('Intento de acceso sin token');
-        return res.status(401).json({
+        res.status(401).json({
             success: false,
             error: 'Token requerido'
         });
+        return;
     }
 
     const user = AuthService.verifyToken(token);
     if (!user) {
         Logger.auth('Token inválido');
-        return res.status(403).json({
+        res.status(403).json({
             success: false,
             error: 'Token inválido'
         });
+        return;
     }
 
     req.user = user;
@@ -30,7 +32,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
 }
 
 // Middleware para verificar si el usuario está autenticado (opcional)
-export function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -45,13 +47,14 @@ export function optionalAuth(req: AuthenticatedRequest, res: Response, next: Nex
 }
 
 // Middleware para verificar roles (para futuras implementaciones)
-export function requireRole(role: string) {
-    return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export function requireRole(_role: string) {
+    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
         if (!req.user) {
-            return res.status(401).json({
+            res.status(401).json({
                 success: false,
                 error: 'Usuario no autenticado'
             });
+            return;
         }
 
         // Aquí se puede agregar lógica de roles cuando se implemente
@@ -64,7 +67,7 @@ export function requireRole(role: string) {
 export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 * 1000) {
     const requests = new Map<string, { count: number; resetTime: number }>();
 
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
         const ip = req.ip || req.connection.remoteAddress || 'unknown';
         const now = Date.now();
 
@@ -77,11 +80,12 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 
 
             if (userRequests.count > maxRequests) {
                 Logger.warn(`Rate limit excedido para IP: ${ip} (${userRequests.count}/${maxRequests})`);
-                return res.status(429).json({
+                res.status(429).json({
                     success: false,
                     error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.',
                     retryAfter: Math.ceil((userRequests.resetTime - now) / 1000)
                 });
+                return;
             }
         }
 
@@ -90,13 +94,13 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 
 }
 
 // Función para limpiar rate limiting (útil para desarrollo)
-export function clearRateLimit() {
+export function clearRateLimit(): void {
     // Esta función se puede llamar para limpiar el rate limiting en desarrollo
     Logger.info('Rate limiting limpiado para desarrollo');
 }
 
 // Middleware para logging de requests
-export function requestLogger(req: Request, res: Response, next: NextFunction) {
+export function requestLogger(req: Request, res: Response, next: NextFunction): void {
     const start = Date.now();
 
     res.on('finish', () => {
@@ -113,7 +117,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
 }
 
 // Middleware para manejo de errores
-export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
     Logger.error('Error en request', {
         error: err.message,
         stack: err.stack,
@@ -123,7 +127,8 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
     });
 
     if (res.headersSent) {
-        return next(err);
+        next(err);
+        return;
     }
 
     res.status(500).json({

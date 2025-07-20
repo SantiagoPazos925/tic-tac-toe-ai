@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { User } from '../types';
-import { formatTime, getStatusColor, getStatusText, getAvatarInitial } from '../utils/formatters';
+import { formatJoinDate, getAvatarInitial, getStatusColor, getStatusText } from '../utils/formatters';
 
 interface UsersListProps {
     users: User[];
@@ -13,32 +13,32 @@ export const UsersList = ({ users, onUserContextMenu }: UsersListProps) => {
     const awayUsers = users.filter(user => user.status === 'away');
 
     const renderUserCard = (user: User) => (
-        <motion.div
-            key={user.id}
-            className="user-card"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.4 }}
-            onContextMenu={(e) => onUserContextMenu(e, user)}
-        >
-            <div className="user-avatar">
-                {getAvatarInitial(user.name)}
-            </div>
-            <div className="user-details">
-                <h4>{user.name}</h4>
-                <span
-                    className="user-status"
-                    style={{ color: getStatusColor(user.status) }}
-                >
-                    {getStatusText(user.status)}
-                </span>
-            </div>
-            <div className="user-time">
-                Desde {formatTime(user.joinedAt)}
-            </div>
-        </motion.div>
-    );
+            <motion.div
+                key={user.id}
+                className="user-card"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.4 }}
+                onContextMenu={(e) => onUserContextMenu(e, user)}
+            >
+                <div className="user-avatar">
+                    {getAvatarInitial(user.username || user.name)}
+                </div>
+                <div className="user-details">
+                    <h4>{user.username || user.name || 'Usuario'}</h4>
+                    <span
+                        className="user-status"
+                        style={{ color: getStatusColor(user.status) }}
+                    >
+                        {getStatusText(user.status)}
+                    </span>
+                </div>
+                <div className="user-time">
+                    {formatJoinDate(user.joinDate)}
+                </div>
+            </motion.div>
+        );
 
     return (
         <div className="users-container">

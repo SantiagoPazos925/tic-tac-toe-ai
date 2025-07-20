@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { useEffect } from 'react';
-import { User, ContextMenuPosition } from '../types';
-import { getStatusColor, getStatusText, getAvatarInitial } from '../utils/formatters';
+import { ContextMenuPosition, User } from '../types';
+import { getAvatarInitial, getStatusColor, getStatusText } from '../utils/formatters';
 
 interface UserContextMenuProps {
     contextMenuUser: User;
@@ -45,10 +45,10 @@ export const UserContextMenu = ({
         >
             <div className="context-menu-header">
                 <div className="context-user-avatar">
-                    {getAvatarInitial(contextMenuUser.name)}
+                    {getAvatarInitial(contextMenuUser.username)}
                 </div>
                 <div className="context-user-info">
-                    <h4>{contextMenuUser.name}</h4>
+                    <h4>{contextMenuUser.username}</h4>
                     <span
                         className="context-user-status"
                         style={{ color: getStatusColor(contextMenuUser.status) }}

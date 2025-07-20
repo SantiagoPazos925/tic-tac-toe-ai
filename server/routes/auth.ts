@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticateToken, rateLimit, clearRateLimit } from '../middleware/auth.js';
 import { AuthController } from '../controllers/auth.js';
+import { authenticateToken, clearRateLimit, rateLimit } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -14,8 +14,8 @@ router.post('/register', authRateLimit, AuthController.register);
 router.post('/login', authRateLimit, AuthController.login);
 
 // Endpoint para limpiar rate limiting en desarrollo
-router.post('/clear-rate-limit', (req, res) => {
-    if (process.env.NODE_ENV === 'development') {
+router.post('/clear-rate-limit', (_req, res) => {
+    if (process.env['NODE_ENV'] === 'development') {
         clearRateLimit();
         res.json({ success: true, message: 'Rate limiting limpiado' });
     } else {

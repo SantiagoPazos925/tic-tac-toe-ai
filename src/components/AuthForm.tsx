@@ -1,33 +1,34 @@
-import { useState } from 'react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
 import { useAuthContext } from '../contexts/AuthContext';
-import { AuthForm as AuthFormType } from '../types';
-import { isValidEmail, isValidUsername, isValidPassword } from '../utils/formatters';
+import type { RegisterData } from '../types';
+import { isValidEmail, isValidPassword, isValidUsername } from '../utils/formatters';
 
 export const AuthForm = () => {
     const { login, register, isLoading } = useAuthContext();
     const [isLogin, setIsLogin] = useState(true);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const [formData, setFormData] = useState<AuthFormType>({
+    const [formData, setFormData] = useState<RegisterData>({
         username: '',
         email: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
     });
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 
-        if (!isValidUsername(formData.username)) {
-            newErrors.username = 'El nombre de usuario debe tener entre 3 y 20 caracteres';
+        if (!isValidUsername(formData['username'])) {
+            newErrors['username'] = 'El nombre de usuario debe tener entre 3 y 20 caracteres';
         }
 
-        if (!isLogin && !isValidEmail(formData.email)) {
-            newErrors.email = 'Ingresa un email válido';
+        if (!isLogin && !isValidEmail(formData['email'])) {
+            newErrors['email'] = 'Ingresa un email válido';
         }
 
-        if (!isValidPassword(formData.password)) {
-            newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+        if (!isValidPassword(formData['password'])) {
+            newErrors['password'] = 'La contraseña debe tener al menos 6 caracteres';
         }
 
         setErrors(newErrors);
@@ -43,7 +44,11 @@ export const AuthForm = () => {
             if (isLogin) {
                 await login(formData.username, formData.password);
             } else {
-                await register(formData);
+                const registerData = {
+                    ...formData,
+                    type: 'register' as const
+                };
+                await register(registerData);
             }
         } catch (error) {
             console.error('Error de autenticación:', error);
@@ -51,10 +56,10 @@ export const AuthForm = () => {
         }
     };
 
-    const handleInputChange = (field: keyof AuthFormType, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const handleInputChange = (field: keyof RegisterData, value: string) => {
+        setFormData((prev: RegisterData) => ({ ...prev, [field]: value }));
         // Limpiar error del campo cuando el usuario empiece a escribir
-        if (errors[field]) {
+        if (errors[field as string]) {
             setErrors(prev => ({ ...prev, [field]: '' }));
         }
     };
@@ -71,9 +76,9 @@ export const AuthForm = () => {
             <div className="auth-form-container">
                 <h2>{isLogin ? 'Iniciar Sesión' : 'Registrarse'}</h2>
 
-                {errors.general && (
+                {errors['general'] && (
                     <div className="auth-error">
-                        {errors.general}
+                        {errors['general']}
                     </div>
                 )}
 
@@ -84,9 +89,9 @@ export const AuthForm = () => {
                         value={formData.username}
                         onChange={(e) => handleInputChange('username', e.target.value)}
                         required
-                        className={`auth-input ${errors.username ? 'error' : ''}`}
+                        className={`auth-input ${errors['username'] ? 'error' : ''}`}
                     />
-                    {errors.username && <span className="field-error">{errors.username}</span>}
+                    {errors['username'] && <span className="field-error">{errors['username']}</span>}
 
                     {!isLogin && (
                         <>
@@ -96,9 +101,9 @@ export const AuthForm = () => {
                                 value={formData.email}
                                 onChange={(e) => handleInputChange('email', e.target.value)}
                                 required
-                                className={`auth-input ${errors.email ? 'error' : ''}`}
+                                className={`auth-input ${errors['email'] ? 'error' : ''}`}
                             />
-                            {errors.email && <span className="field-error">{errors.email}</span>}
+                            {errors['email'] && <span className="field-error">{errors['email']}</span>}
                         </>
                     )}
 
@@ -108,9 +113,9 @@ export const AuthForm = () => {
                         value={formData.password}
                         onChange={(e) => handleInputChange('password', e.target.value)}
                         required
-                        className={`auth-input ${errors.password ? 'error' : ''}`}
+                        className={`auth-input ${errors['password'] ? 'error' : ''}`}
                     />
-                    {errors.password && <span className="field-error">{errors.password}</span>}
+                    {errors['password'] && <span className="field-error">{errors['password']}</span>}
 
                     <motion.button
                         type="submit"
@@ -131,7 +136,7 @@ export const AuthForm = () => {
                             onClick={() => {
                                 setIsLogin(!isLogin);
                                 setErrors({});
-                                setFormData({ username: '', email: '', password: '' });
+                                setFormData({ username: '', email: '', password: '', confirmPassword: '' });
                             }}
                             className="switch-button"
                             whileHover={{ scale: 1.08 }}

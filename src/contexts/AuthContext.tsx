@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { authService } from '../services/authService';
 import { socketService } from '../services/socketService';
-import { AuthUser, AuthForm } from '../types';
+import { AuthForm, AuthUser } from '../types';
 
 interface AuthContextType {
     authUser: AuthUser | null;
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const response = await authService.login(username, password);
             console.log('🔍 DEBUG: Login exitoso, guardando sesión');
 
-            authService.saveSession(response.user, response.token);
+            authService.saveSession(response.user, response.token || '');
 
             setAuthUser(response.user);
             setIsAuthenticated(true);
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             setIsLoading(true);
             const response = await authService.register(authForm);
-            authService.saveSession(response.user, response.token);
+            authService.saveSession(response.user, response.token || '');
             setAuthUser(response.user);
             setIsAuthenticated(true);
 

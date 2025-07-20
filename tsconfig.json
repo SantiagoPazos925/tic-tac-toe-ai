@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": [
-      "ES2020",
+      "ES2022",
       "DOM",
       "DOM.Iterable"
     ],
@@ -16,12 +16,17 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    /* Linting */
+    /* Linting - Más estricto para IA */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    /* Path mapping */
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    /* Path mapping optimizado para IA */
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -33,16 +38,29 @@
       "@/hooks/*": [
         "src/hooks/*"
       ],
+      "@/contexts/*": [
+        "src/contexts/*"
+      ],
       "@/services/*": [
         "src/services/*"
       ],
-      "@/types": [
-        "src/types"
+      "@/types/*": [
+        "src/types/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ],
+      "@/styles/*": [
+        "src/styles/*"
+      ],
+      "@/server/*": [
+        "server/*"
       ]
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "server/**/*"
   ],
   "exclude": [
     "node_modules",

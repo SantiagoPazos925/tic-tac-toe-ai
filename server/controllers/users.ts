@@ -4,7 +4,7 @@ import { Logger } from '../utils/logger.js';
 
 export class UsersController {
     // Obtener todos los usuarios registrados
-    static async getAllUsers(req: Request, res: Response) {
+    static async getAllUsers(_req: Request, res: Response): Promise<void> {
         try {
             const users = await getAllUsers();
 
@@ -23,7 +23,7 @@ export class UsersController {
     }
 
     // Obtener estadísticas de usuarios
-    static async getUserStats(req: Request, res: Response) {
+    static async getUserStats(_req: Request, res: Response): Promise<void> {
         try {
             const users = await getAllUsers();
 

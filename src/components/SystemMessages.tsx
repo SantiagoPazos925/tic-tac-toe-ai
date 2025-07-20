@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
-import { ChatMessage } from '../types';
+import { Message } from '../types';
 import { formatTime } from '../utils/formatters';
+
+type ChatMessage = Message;
 
 interface SystemMessagesProps {
     messages: ChatMessage[];

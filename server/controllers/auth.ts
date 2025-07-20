@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.js';
-import { LoginRequest, RegisterRequest, AuthenticatedRequest } from '../types/index.js';
-import { ValidationError } from '../utils/validation.js';
+import { AuthenticatedRequest, LoginRequest, RegisterRequest } from '../types/index.js';
 import { Logger } from '../utils/logger.js';
+import { ValidationError } from '../utils/validation.js';
 
 export class AuthController {
     // Registro de usuario
-    static async register(req: Request, res: Response) {
+    static async register(req: Request, res: Response): Promise<void> {
         try {
             const userData: RegisterRequest = req.body;
             const result = await AuthService.register(userData);
@@ -18,10 +18,11 @@ export class AuthController {
 
         } catch (error) {
             if (error instanceof ValidationError) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     error: error.message
                 });
+                return;
             }
 
             Logger.error('Error en registro', error);
@@ -33,7 +34,7 @@ export class AuthController {
     }
 
     // Inicio de sesión
-    static async login(req: Request, res: Response) {
+    static async login(req: Request, res: Response): Promise<void> {
         try {
             const loginData: LoginRequest = req.body;
             const result = await AuthService.login(loginData);
@@ -45,10 +46,11 @@ export class AuthController {
 
         } catch (error) {
             if (error instanceof ValidationError) {
-                return res.status(401).json({
+                res.status(401).json({
                     success: false,
                     error: error.message
                 });
+                return;
             }
 
             Logger.error('Error en login', error);
@@ -60,21 +62,23 @@ export class AuthController {
     }
 
     // Obtener perfil del usuario
-    static async getProfile(req: AuthenticatedRequest, res: Response) {
+    static async getProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             if (!req.user) {
-                return res.status(401).json({
+                res.status(401).json({
                     success: false,
                     error: 'Usuario no autenticado'
                 });
+                return;
             }
 
             const user = await AuthService.getProfile(req.user.username);
             if (!user) {
-                return res.status(404).json({
+                res.status(404).json({
                     success: false,
                     error: 'Usuario no encontrado'
                 });
+                return;
             }
 
             res.json({
@@ -92,24 +96,26 @@ export class AuthController {
     }
 
     // Verificar token (para validar tokens en el frontend)
-    static async verifyToken(req: Request, res: Response) {
+    static async verifyToken(req: Request, res: Response): Promise<void> {
         try {
             const authHeader = req.headers['authorization'];
             const token = authHeader && authHeader.split(' ')[1];
 
             if (!token) {
-                return res.status(401).json({
+                res.status(401).json({
                     success: false,
                     error: 'Token requerido'
                 });
+                return;
             }
 
             const user = AuthService.verifyToken(token);
             if (!user) {
-                return res.status(403).json({
+                res.status(403).json({
                     success: false,
                     error: 'Token inválido'
                 });
+                return;
             }
 
             res.json({

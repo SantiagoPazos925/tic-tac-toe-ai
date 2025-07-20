@@ -1,22 +1,26 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
   root: '.',
   css: {
-    postcss: './postcss.config.js'
+    postcss: './postcss.config.js',
+    devSourcemap: true
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           socket: ['socket.io-client'],
           motion: ['motion/react'],
-          emoji: ['emoji-picker-react']
+          emoji: ['emoji-picker-react'],
+          utils: ['@/utils/logger', '@/utils/formatters', '@/utils/performance']
         }
       }
     },
@@ -24,22 +28,37 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: false, // Mantener console para debugging
         drop_debugger: true
       }
     }
   },
   resolve: {
     alias: {
-      '@': '/src'
+      '@': resolve(__dirname, './src'),
+      '@/components': resolve(__dirname, './src/components'),
+      '@/hooks': resolve(__dirname, './src/hooks'),
+      '@/contexts': resolve(__dirname, './src/contexts'),
+      '@/services': resolve(__dirname, './src/services'),
+      '@/types': resolve(__dirname, './src/types'),
+      '@/utils': resolve(__dirname, './src/utils'),
+      '@/styles': resolve(__dirname, './src/styles'),
+      '@/server': resolve(__dirname, './server')
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'socket.io-client']
+    include: ['react', 'react-dom', 'socket.io-client', 'motion/react']
   },
   server: {
     hmr: {
       overlay: false
-    }
+    },
+    port: 5173,
+    host: true,
+    open: true
+  },
+  preview: {
+    port: 4173,
+    host: true
   }
 });

@@ -1,6 +1,13 @@
 // Formatear tiempo
-export const formatTime = (date: Date): string => {
-    return new Date(date).toLocaleTimeString('es-ES', {
+export const formatTime = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida';
+    }
+    
+    return dateObj.toLocaleTimeString('es-ES', {
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -27,13 +34,35 @@ export const getStatusText = (status: string): string => {
 };
 
 // Formatear nombre para avatar
-export const getAvatarInitial = (name: string): string => {
+export const getAvatarInitial = (name: string | undefined | null): string => {
+    if (!name || name.trim() === '') {
+        return '?';
+    }
     return name.charAt(0).toUpperCase();
 };
 
 // Formatear ping
 export const formatPing = (ping: number): string => {
     return `${ping}ms`;
+};
+
+// Formatear fecha de conexión
+export const formatJoinDate = (date: Date | string | undefined): string => {
+    if (!date) {
+        return 'Fecha no disponible';
+    }
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida';
+    }
+    
+    return dateObj.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 };
 
 // Validar email

@@ -1,15 +1,15 @@
-import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import compression from 'compression';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 
 // Configuración
 import {
-    serverConfig,
     corsOptions,
+    serverConfig,
     socketConfig
 } from './config/index.js';
 
@@ -23,8 +23,8 @@ import userRoutes from './routes/users.js';
 
 // Middleware
 import {
-    requestLogger,
-    errorHandler
+    errorHandler,
+    requestLogger
 } from './middleware/auth.js';
 
 // Utilidades
@@ -85,7 +85,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
 // Health check para Railway
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
     const stats = socketService.getLobbyStats();
 
     res.status(200).json({
@@ -103,7 +103,7 @@ app.get('/health', (req, res) => {
 });
 
 // Ruta principal
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.json({
         success: true,
         data: {
@@ -116,7 +116,7 @@ app.get('/', (req, res) => {
 });
 
 // Ruta de ejemplo
-app.get('/api/hello', (req, res) => {
+app.get('/api/hello', (_req, res) => {
     res.json({
         success: true,
         data: {

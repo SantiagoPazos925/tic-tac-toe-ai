@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, ChatMessage, ContextMenuPosition } from '../types';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useSocket } from '../hooks/useSocket';
+import { ContextMenuPosition, Message, User } from '../types';
 import { useAuthContext } from './AuthContext';
 
 interface LobbyState {
@@ -13,7 +13,8 @@ interface LobbyState {
     currentUser: User | null;
 
     // Chat
-    chatMessages: ChatMessage[];
+    messages: Message[];
+    systemMessages: Message[];
     newMessage: string;
 
     // UI State
@@ -64,7 +65,7 @@ interface LobbyProviderProps {
 }
 
 export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
-    const { isConnected, ping, users, chatMessages, userMessages, systemMessages, socketService } = useSocket();
+    const { isConnected, ping, users, userMessages, systemMessages, socketService } = useSocket();
     const { logout, authUser } = useAuthContext();
 
     // Estado local
@@ -82,12 +83,17 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     // Actualizar el usuario actual cuando se recibe la lista de usuarios
     useEffect(() => {
         if (users.length > 0 && authUser) {
-            const user = users.find(u => u.name === authUser.username);
+            const user = users.find(u => u.username === authUser.username);
             if (user) {
-                setCurrentUser(user);
+                // Solo actualizar si el usuario es diferente o si no hay currentUser
+                if (!currentUser || 
+                    currentUser.status !== user.status || 
+                    currentUser.id !== user.id) {
+                    setCurrentUser(user);
+                }
             }
         }
-    }, [users, authUser]);
+    }, [users, authUser, currentUser]);
 
     // Scroll automático para mensajes del chat
     useEffect(() => {
@@ -170,16 +176,16 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
 
         switch (action) {
             case 'profile':
-                console.log(`Ver perfil de ${contextMenuUser.name}`);
+                console.log(`Ver perfil de ${contextMenuUser.username}`);
                 break;
             case 'message':
-                console.log(`Enviar mensaje a ${contextMenuUser.name}`);
+                console.log(`Enviar mensaje a ${contextMenuUser.username}`);
                 break;
             case 'invite':
-                console.log(`Invitar a ${contextMenuUser.name} a jugar`);
+                console.log(`Invitar a ${contextMenuUser.username} a jugar`);
                 break;
             case 'block':
-                console.log(`Bloquear a ${contextMenuUser.name}`);
+                console.log(`Bloquear a ${contextMenuUser.username}`);
                 break;
         }
 
@@ -218,7 +224,8 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
         ping,
         users,
         currentUser,
-        chatMessages,
+        messages: userMessages,
+        systemMessages,
         newMessage,
         showStatusMenu,
         showUserContextMenu,

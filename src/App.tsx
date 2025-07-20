@@ -1,15 +1,15 @@
-import { useEffect, useState, lazy, Suspense } from 'react'
 import { motion } from 'motion/react'
-import { useAuthContext } from './contexts/AuthContext'
-import { useLobbyContext } from './contexts/LobbyContext'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { AuthForm } from './components/AuthForm'
-import { LobbyHeader } from './components/LobbyHeader'
-import { SystemMessages } from './components/SystemMessages'
 import { ChatSection } from './components/ChatSection'
-import { UsersList } from './components/UsersList'
-import { UserProfile } from './components/UserProfile'
+import { LobbyHeader } from './components/LobbyHeader'
 import { MobileNavigation } from './components/MobileNavigation'
 import { OfflineIndicator } from './components/OfflineIndicator'
+import { SystemMessages } from './components/SystemMessages'
+import { UserProfile } from './components/UserProfile'
+import { UsersList } from './components/UsersList'
+import { useAuthContext } from './contexts/AuthContext'
+import { useLobbyContext } from './contexts/LobbyContext'
 
 // Lazy load components that are not critical for initial render
 const UserContextMenu = lazy(() => import('./components/UserContextMenu').then(module => ({ default: module.UserContextMenu })));
@@ -50,7 +50,8 @@ function App() {
     isConnected,
     ping,
     users,
-    chatMessages,
+    messages: userMessages,
+    systemMessages,
     newMessage,
     currentUser,
     showStatusMenu,
@@ -78,7 +79,7 @@ function App() {
       const currentSocket = socketService.getSocket();
       if (currentSocket && currentSocket.connected) {
         // Verificar si ya está en el lobby
-        const isAlreadyInLobby = users.some(user => user.name === authUser.username);
+        const isAlreadyInLobby = users.some(user => user.username === authUser.username);
         if (!isAlreadyInLobby) {
           socketService.joinLobby(authUser.username);
         }
@@ -141,12 +142,12 @@ function App() {
         {/* Main Content - Chat */}
         <div className="main-content">
           <SystemMessages
-            messages={chatMessages}
+            messages={systemMessages}
             systemMessagesEndRef={systemMessagesEndRef}
           />
 
           <ChatSection
-            messages={chatMessages}
+            messages={userMessages}
             chatEndRef={chatEndRef}
             newMessage={newMessage}
             setNewMessage={setNewMessage}

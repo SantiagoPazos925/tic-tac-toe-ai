@@ -1,5 +1,5 @@
-import { LobbyUser, ChatMessage } from '../types/index.js';
 import { lobbyConfig } from '../config/index.js';
+import { ChatMessage, LobbyUser } from '../types/index.js';
 import { Logger } from '../utils/logger.js';
 import { validateChatMessage, ValidationError } from '../utils/validation.js';
 
@@ -9,7 +9,7 @@ export class LobbyService {
     private chatMessages: ChatMessage[] = [];
 
     // Unirse al lobby
-    joinLobby(socketId: string, username: string): { user: LobbyUser; disconnectedSocketId: string | null } {
+    joinLobby(socketId: string, username: string): { user: LobbyUser | null; disconnectedSocketId: string | null } {
         const now = new Date();
         let disconnectedSocketId: string | null = null;
 
@@ -30,7 +30,7 @@ export class LobbyService {
 
         // Tomar la primera conexión eliminada como la principal para notificar
         if (existingConnections.length > 0) {
-            disconnectedSocketId = existingConnections[0];
+            disconnectedSocketId = existingConnections[0] || null;
             Logger.lobby(`🔍 DEBUG: Desconectando conexión principal para ${username}: ${disconnectedSocketId}`);
         }
 
@@ -49,6 +49,13 @@ export class LobbyService {
             (now.getTime() - existingSession.lastSeen.getTime()) < lobbyConfig.reconnectionTimeout;
 
         Logger.lobby(`🔍 DEBUG: Es reconexión: ${isReconnection}`);
+
+        // Verificar si el usuario ya está conectado con el mismo socket
+        const existingUser = this.connectedUsers.get(socketId);
+        if (existingUser && existingUser.name === username) {
+            Logger.lobby(`🔍 DEBUG: Usuario ${username} ya está conectado con socket ${socketId}, no haciendo nada`);
+            return { user: null, disconnectedSocketId: null };
+        }
 
         const user: LobbyUser = {
             id: socketId,
@@ -213,7 +220,7 @@ export class LobbyService {
     private cleanupDisconnectedSessions(): void {
         const connectedUsernames = new Set(Array.from(this.connectedUsers.values()).map(user => user.name));
 
-        for (const [username, session] of this.userSessions.entries()) {
+        for (const [username, _session] of this.userSessions.entries()) {
             if (!connectedUsernames.has(username)) {
                 this.userSessions.delete(username);
                 Logger.lobby(`Sesión limpiada para usuario desconectado: ${username}`);

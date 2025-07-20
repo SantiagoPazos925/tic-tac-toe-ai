@@ -1,7 +1,6 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
-import { Pool, PoolClient } from 'pg';
 import bcrypt from 'bcryptjs';
+import { Database, open } from 'sqlite';
+import sqlite3 from 'sqlite3';
 import { databaseConfig } from '../config/index.js';
 import { User, UserProfile } from '../types/index.js';
 import { Logger } from '../utils/logger.js';
@@ -54,7 +53,7 @@ class SQLiteService extends DatabaseService {
         );
 
         return {
-            id: result.lastID,
+            id: result.lastID || 0,
             username: userData.username,
             email: userData.email,
             password_hash: hashedPassword,
@@ -93,9 +92,10 @@ class SQLiteService extends DatabaseService {
 
 // Implementación para PostgreSQL
 class PostgreSQLService extends DatabaseService {
-    private pool!: Pool;
+    private pool: any; // Usar any para evitar problemas con pg
 
     async init(): Promise<void> {
+        const { Pool } = await import('pg');
         this.pool = new Pool({
             connectionString: databaseConfig.connectionString,
             ssl: databaseConfig.ssl ? {
@@ -198,7 +198,7 @@ export function createDatabaseService(): DatabaseService {
 // Instancia global de la base de datos
 export const dbService = createDatabaseService();
 
-// Funciones de conveniencia para mantener compatibilidad
+// Funciones de conveniencia para usar la instancia global
 export async function initDatabase(): Promise<void> {
     await dbService.init();
 }
@@ -216,7 +216,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function updateUserStatus(userId: number, status: string): Promise<void> {
-    return await dbService.updateUserStatus(userId, status);
+    await dbService.updateUserStatus(userId, status);
 }
 
 export async function getAllUsers(): Promise<UserProfile[]> {
