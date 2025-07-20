@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -12,7 +11,7 @@
   <meta name="keywords" content="tic-tac-toe, juego, chat, lobby, tiempo real, socket.io" />
   <meta name="author" content="Tic-Tac-Toe AI" />
   <meta name="robots" content="index, follow" />
-  
+
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://tic-tac-toe-ai-ochre.vercel.app/" />
@@ -50,78 +49,82 @@
   <link rel="shortcut icon" href="/icon.svg" />
 
   <title>Tic-Tac-Toe AI - Lobby de Juegos</title>
-  
+
   <!-- Preloads críticos para First Paint -->
   <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml">
-  <link rel="preload" href="/src/index.tsx" as="script" type="module">
-  <link rel="preload" href="/src/styles/index.css" as="style">
   
-  <!-- DNS prefetch para dominios externos -->
-  <link rel="dns-prefetch" href="https://esm.sh">
-  <link rel="dns-prefetch" href="https://cdn.socket.io">
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-  <link rel="dns-prefetch" href="https://tic-tac-toe-ai-production-13d0.up.railway.app">
-  
-  <!-- Preconnect para conexiones críticas -->
-  <link rel="preconnect" href="https://esm.sh" crossorigin>
-  <link rel="preconnect" href="https://cdn.socket.io" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Preconnect para conexiones críticas - Optimización para móviles -->
   <link rel="preconnect" href="https://tic-tac-toe-ai-production-13d0.up.railway.app" crossorigin>
-  
-  <!-- Import map optimizado -->
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/"
-  }
-}
-</script>
+  <link rel="preconnect" href="https://cdn.socket.io" crossorigin>
+  <link rel="dns-prefetch" href="https://tic-tac-toe-ai-production-13d0.up.railway.app">
+  <link rel="dns-prefetch" href="https://cdn.socket.io">
 
-  <!-- Critical CSS inline para evitar FOUC -->
+  <!-- Critical CSS inline para evitar FOUC y mejorar LCP -->
   <style>
-    /* Critical CSS para evitar layout shift */
+    /* Critical CSS para First Paint */
     body {
+      background-color: #36393f;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #36393f;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
     
     #root {
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
     }
     
-    /* Loading spinner para evitar layout shift */
     .loading-spinner {
-      display: flex;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
       background-color: #36393f;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
     }
     
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #5865f2;
-      border-top: 4px solid transparent;
-      border-radius: 50%;
       animation: spin 1s linear infinite;
+      border: 4px solid #5865f2;
+      border-radius: 50%;
+      border-top-color: transparent;
+      height: 40px;
+      width: 40px;
     }
     
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    /* Optimizaciones para móviles */
+    @media (max-width: 768px) {
+      .loading-spinner {
+        height: 100dvh; /* Usar dynamic viewport height en móviles */
+      }
+    }
   </style>
+
+  <!-- Import map optimizado -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.1.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+        "react/": "https://esm.sh/react@^19.1.0/"
+      }
+    }
+  </script>
+
+  <!-- Cargar CSS de forma no bloqueante -->
+  <link rel="preload" href="/src/styles/index.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/src/styles/index.css"></noscript>
+
+  <!-- Cargar JavaScript de forma diferida para mejorar LCP -->
+  <script type="module" crossorigin src="/src/index.tsx" defer></script>
 </head>
 
 <body class="bg-gray-900 text-white">
@@ -129,11 +132,9 @@
   <div id="loading-fallback" class="loading-spinner">
     <div class="spinner"></div>
   </div>
-  
+
   <div id="root"></div>
-  
-  <script type="module" src="/src/index.tsx"></script>
-  
+
   <!-- Script para ocultar loading fallback -->
   <script>
     // Ocultar loading fallback cuando la app esté lista
@@ -143,7 +144,7 @@
         loadingFallback.style.display = 'none';
       }
     });
-    
+
     // Fallback si la app tarda más de 3 segundos
     setTimeout(() => {
       const loadingFallback = document.getElementById('loading-fallback');
@@ -151,6 +152,15 @@
         loadingFallback.style.display = 'none';
       }
     }, 3000);
+
+    // Optimización para móviles: detectar conexión lenta
+    if ('connection' in navigator) {
+      const connection = navigator.connection;
+      if (connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g')) {
+        // Para conexiones lentas, cargar recursos de forma más conservadora
+        document.documentElement.classList.add('slow-connection');
+      }
+    }
   </script>
 </body>
 

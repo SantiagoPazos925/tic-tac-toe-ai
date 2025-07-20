@@ -1,267 +1,235 @@
-import { motion } from 'motion/react'
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { AuthForm } from './components/AuthForm'
-import { ChatSection } from './components/ChatSection'
-import { CriticalResourcePreloader } from './components/CriticalResourcePreloader'
-import { ImageOptimizationDemo } from './components/ImageOptimizationDemo'
-import { LobbyHeader } from './components/LobbyHeader'
-import { MobileNavigation } from './components/MobileNavigation'
-import { OfflineIndicator } from './components/OfflineIndicator'
-import { SocketOptimizer, SocketStatusIndicator } from './components/SocketOptimizer'
-import { SystemMessages } from './components/SystemMessages'
-import { UserProfile } from './components/UserProfile'
-import { UsersList } from './components/UsersList'
-import { VirtualizationDemo } from './components/VirtualizationDemo'
-import { useAuthContext } from './contexts/AuthContext'
-import { useLobbyContext } from './contexts/LobbyContext'
+import React, { Suspense, useEffect, useState } from 'react';
+import { AuthForm } from './components/AuthForm';
+import { ChatSection } from './components/ChatSection';
+import { CriticalResourcePreloader } from './components/CriticalResourcePreloader';
+import { LazySocketLoader } from './components/LazySocketLoader';
+import { LobbyHeader } from './components/LobbyHeader';
+import { MobileNavigation } from './components/MobileNavigation';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { ResourcePreloader } from './components/ResourcePreloader';
+import { SocketStatusIndicator } from './components/SocketOptimizer';
+import { SystemMessages } from './components/SystemMessages';
+import { UserContextMenu } from './components/UserContextMenu';
+import { UsersList } from './components/UsersList';
+import { useAuthContext } from './contexts/AuthContext';
+import { useLobbyContext } from './contexts/LobbyContext';
+import './styles/index.css';
+import Logger from './utils/logger';
+import { optimizePerformance } from './utils/performance';
 
-// Lazy load components that are not critical for initial render
-const UserContextMenu = lazy(() => import('./components/UserContextMenu').then(module => ({ default: module.UserContextMenu })));
+// Componentes de carga diferida para móviles
+const LazyVirtualizationDemo = React.lazy(() => import('./components/VirtualizationDemo').then(module => ({ default: module.VirtualizationDemo })));
+const LazyImageOptimizationDemo = React.lazy(() => import('./components/ImageOptimizationDemo').then(module => ({ default: module.ImageOptimizationDemo })));
 
-// Loading component for lazy loaded components
-const LazyLoader = () => (
-  <div className="flex items-center justify-center p-4">
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-discord-accent"></div>
-  </div>
-);
-
-// Hook para detectar el tamaño de pantalla
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, []);
-
-  return isMobile;
-};
-
-function App() {
-  const { authUser, isAuthenticated } = useAuthContext();
-  const isMobile = useIsMobile();
-
-  // Estado para navegación móvil (solo en móviles)
-  const [showUsers, setShowUsers] = useState(false);
-  const [showChannels, setShowChannels] = useState(false);
-  const [showVirtualizationDemo, setShowVirtualizationDemo] = useState(false);
-  const [showImageOptimizationDemo, setShowImageOptimizationDemo] = useState(false);
-  const showDemo = false
-  
+const App: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuthContext();
   const {
     isConnected,
     ping,
     users,
-    messages: userMessages,
+    messages,
     systemMessages,
     newMessage,
-    currentUser,
-    showStatusMenu,
     showUserContextMenu,
     contextMenuUser,
     contextMenuPosition,
     setNewMessage,
     sendMessage,
-    toggleStatusMenu,
-    handleStatusChange,
     handleUserContextMenu,
     closeUserContextMenu,
     handleUserAction,
-    handleLogout,
     chatEndRef,
     systemMessagesEndRef,
-    socketService,
     sendPing
   } = useLobbyContext();
 
-  // Unirse al lobby cuando el usuario se autentica y el socket está conectado
-  useEffect(() => {
-    if (authUser && isConnected) {
-      // Solo unirse al lobby si no se ha unido ya (evitar doble conexión)
-      const currentSocket = socketService.getSocket();
-      if (currentSocket && currentSocket.connected) {
-        // Verificar si ya está en el lobby
-        const isAlreadyInLobby = users.some(user => user.username === authUser.username);
-        if (!isAlreadyInLobby) {
-          socketService.joinLobby(authUser.username);
-        }
-      }
-    }
-  }, [authUser, isConnected, socketService, users]);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Enviar pings periódicos para medir latencia
+  // Detectar si es móvil
   useEffect(() => {
-    if (!isConnected) return;
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
 
-    const pingInterval = setInterval(() => {
-      sendPing();
-    }, 5000); // Ping cada 5 segundos
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
 
     return () => {
-      clearInterval(pingInterval);
+      window.removeEventListener('resize', checkMobile);
     };
+  }, []);
+
+  // Optimizaciones de rendimiento
+  useEffect(() => {
+    const performanceMonitor = optimizePerformance();
+    
+    // Cleanup al desmontar
+    return () => {
+      performanceMonitor.disconnect();
+    };
+  }, []);
+
+  // Scroll automático para mensajes del chat
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length, chatEndRef]);
+
+  // Scroll automático para mensajes del sistema
+  useEffect(() => {
+    if (systemMessagesEndRef.current && systemMessages.length > 0) {
+      setTimeout(() => {
+        systemMessagesEndRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }, 100);
+    }
+  }, [systemMessages.length, systemMessagesEndRef]);
+
+  // Enviar ping periódicamente
+  useEffect(() => {
+    if (isConnected) {
+      const pingInterval = setInterval(() => {
+        sendPing();
+      }, 30000); // Ping cada 30 segundos
+
+      return () => clearInterval(pingInterval);
+    }
+    return undefined;
   }, [isConnected, sendPing]);
 
-  // Funciones para navegación móvil (solo en móviles)
-  const toggleUsers = () => {
-    if (isMobile) {
-      setShowUsers(!showUsers);
-      setShowChannels(false); // Cerrar canales si están abiertos
-    }
-  };
+  // Logging para debugging
+  useEffect(() => {
+    Logger.info('App renderizado', {
+      isAuthenticated,
+      isConnected,
+      usersCount: users.length,
+      messagesCount: messages.length,
+      isMobile
+    });
+  }, [isAuthenticated, isConnected, users.length, messages.length, isMobile]);
 
-  const toggleChannels = () => {
-    if (isMobile) {
-      setShowChannels(!showChannels);
-      setShowUsers(false); // Cerrar usuarios si están abiertos
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
-      <SocketOptimizer>
-        <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <LazySocketLoader showStatus={false}>
+        <div className="auth-container">
           <AuthForm />
-          <SocketStatusIndicator />
-        </motion.div>
-      </SocketOptimizer>
+        </div>
+      </LazySocketLoader>
     );
   }
 
   return (
-    <SocketOptimizer>
-      <motion.div className="App" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        {/* Preload de recursos críticos */}
-        <CriticalResourcePreloader />
-        
-        {/* Indicadores de estado offline y actualizaciones */}
-        <OfflineIndicator />
+    <LazySocketLoader showStatus={isMobile}>
+      <div className="app-container">
+        {/* Indicador de conexión para móviles */}
+        {isMobile && (
+          <div className="mobile-connection-indicator">
+            <div className={`connection-dot ${isConnected ? 'connected' : 'disconnected'}`} />
+            <span className="connection-text">
+              {isConnected ? 'Conectado' : 'Desconectado'}
+            </span>
+            {ping && (
+              <span className="ping-text">
+                {ping}ms
+              </span>
+            )}
+          </div>
+        )}
 
-        <LobbyHeader
+        {/* Header del lobby */}
+        <LobbyHeader 
           isConnected={isConnected}
           ping={ping}
         />
 
-        {showDemo && (
-          <>  
-            {/* Botón para mostrar/ocultar demo de virtualización */}
-            <div className="demo-toggle-container">
-              <button
-                className="demo-toggle-button"
-                onClick={() => setShowVirtualizationDemo(!showVirtualizationDemo)}
-              >
-                {showVirtualizationDemo ? '🔽 Ocultar Demo Virtualización' : '🚀 Mostrar Demo Virtualización'}
-              </button>
-            </div>
-
-            {/* Demo de Virtualización */}
-            {showVirtualizationDemo && (
-              <VirtualizationDemo onUserContextMenu={handleUserContextMenu} />
-            )}
-
-            {/* Botón para mostrar/ocultar demo de optimización de imágenes */}
-            <div className="demo-toggle-container">
-              <button
-                className="demo-toggle-button"
-                onClick={() => setShowImageOptimizationDemo(!showImageOptimizationDemo)}
-              >
-                {showImageOptimizationDemo ? '🔽 Ocultar Demo Optimización Imágenes' : '🖼️ Mostrar Demo Optimización Imágenes'}
-              </button>
-            </div>
-
-            {/* Demo de Optimización de Imágenes */}
-            {showImageOptimizationDemo && (
-              <ImageOptimizationDemo />
-            )}
-        </>
-       
-        ) }
-        <div className="lobby-container">
-          {/* Left Sidebar - Canales */}
-          <div className={`left-sidebar ${isMobile && showChannels ? 'show-mobile' : ''}`}>
-            <span>Canales próximamente...</span>
-          </div>
-
-          {/* Main Content - Chat */}
-          <div className="main-content">
-            <SystemMessages
-              messages={systemMessages}
-              systemMessagesEndRef={systemMessagesEndRef}
-            />
-
-            <ChatSection
-              messages={userMessages}
-              chatEndRef={chatEndRef}
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              handleSendMessage={sendMessage}
-            />
-          </div>
-
-          {/* Right Sidebar - Users List + Profile */}
-          <div className={`right-sidebar ${isMobile && showUsers ? 'show-mobile' : ''}`}>
-            <UsersList
-              users={users}
-              onUserContextMenu={handleUserContextMenu}
-            />
-
-            <UserProfile
-              authUser={authUser}
-              currentUser={currentUser}
-              showStatusMenu={showStatusMenu}
-              toggleStatusMenu={toggleStatusMenu}
-              onStatusChange={handleStatusChange}
-              onLogout={handleLogout}
-            />
-          </div>
-        </div>
-
-        {/* Navegación móvil - solo se renderiza en móviles */}
+        {/* Navegación móvil */}
         {isMobile && (
-          <>
-            <MobileNavigation
-              onToggleUsers={toggleUsers}
-              onToggleChannels={toggleChannels}
-              showUsers={showUsers}
-              showChannels={showChannels}
-            />
+          <MobileNavigation 
+            onToggleUsers={() => {}}
+            onToggleChannels={() => {}}
+            showUsers={false}
+            showChannels={false}
+          />
+        )}
 
-            {/* Overlay para cerrar sidebars en móvil */}
-            {(showUsers || showChannels) && (
-              <div
-                className="sidebar-overlay show"
-                onClick={() => {
-                  setShowUsers(false);
-                  setShowChannels(false);
-                }}
+        {/* Contenido principal */}
+        <main className="main-content">
+          <div className="lobby-container">
+            {/* Lista de usuarios */}
+            <aside className="users-sidebar">
+              <UsersList
+                users={users}
+                onUserContextMenu={handleUserContextMenu}
               />
-            )}
-          </>
+            </aside>
+
+            {/* Sección de chat */}
+            <section className="chat-section">
+              <ChatSection
+                messages={messages}
+                newMessage={newMessage}
+                setNewMessage={setNewMessage}
+                handleSendMessage={sendMessage}
+                chatEndRef={chatEndRef}
+              />
+            </section>
+          </div>
+
+          {/* Mensajes del sistema */}
+          <SystemMessages
+            messages={systemMessages}
+            systemMessagesEndRef={systemMessagesEndRef}
+          />
+
+          {/* Demos de optimización (solo en desktop) */}
+          {!isMobile && (
+            <>
+              <Suspense fallback={<div>Cargando demo de virtualización...</div>}>
+                <LazyVirtualizationDemo onUserContextMenu={handleUserContextMenu} />
+              </Suspense>
+
+              <Suspense fallback={<div>Cargando demo de optimización de imágenes...</div>}>
+                <LazyImageOptimizationDemo />
+              </Suspense>
+            </>
+          )}
+
+          {/* Indicador offline */}
+          <OfflineIndicator />
+
+          {/* Preloaders de recursos */}
+          <ResourcePreloader />
+          <CriticalResourcePreloader />
+        </main>
+
+        {/* Menú contextual de usuario */}
+        {showUserContextMenu && contextMenuUser && contextMenuPosition && (
+          <UserContextMenu
+            contextMenuUser={contextMenuUser}
+            contextMenuPosition={contextMenuPosition}
+            onUserAction={handleUserAction}
+            onClose={closeUserContextMenu}
+          />
         )}
 
-        {/* User Context Menu */}
-        {showUserContextMenu && contextMenuUser && (
-          <Suspense fallback={<LazyLoader />}>
-            <UserContextMenu
-              contextMenuUser={contextMenuUser}
-              contextMenuPosition={contextMenuPosition}
-              onUserAction={handleUserAction}
-              onClose={closeUserContextMenu}
-            />
-          </Suspense>
+        {/* Indicador de estado de Socket (solo en desarrollo) */}
+        {import.meta.env.DEV && (
+          <SocketStatusIndicator />
         )}
-
-        {/* Indicador de estado de Socket */}
-        <SocketStatusIndicator />
-      </motion.div>
-    </SocketOptimizer>
+      </div>
+    </LazySocketLoader>
   );
-}
+};
 
-export default App
+export default App;

@@ -1,74 +1,57 @@
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import ViteImageOptimizer from 'vite-plugin-imagemin';
+import { compression } from 'vite-plugin-compression2';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    ViteImageOptimizer({
-      gifsicle: {
-        optimizationLevel: 7,
-        interlaced: false
-      },
-      mozjpeg: {
-        quality: 80,
-        progressive: true
-      },
-      pngquant: {
-        quality: [0.65, 0.8],
-        speed: 4
-      },
-      svgo: {
-        plugins: [
-          {
-            name: 'preset-default',
-            params: {
-              overrides: {
-                removeViewBox: false,
-                removeTitle: false,
-                removeDesc: false
-              }
-            }
-          }
-        ]
-      },
-      webp: {
-        quality: 80
-      }
-    })
+    compression({
+      algorithm: 'gzip',
+      exclude: [/\.(br)$ /, /\.(gz)$/],
+    }),
+    compression({
+      algorithm: 'brotliCompress',
+      exclude: [/\.(br)$ /, /\.(gz)$/],
+    }),
   ],
-  root: '.',
-  css: {
-    postcss: './postcss.config.js',
-    devSourcemap: true
-  },
   build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    sourcemap: false, // Deshabilitar sourcemaps en producción para mejor rendimiento
+    target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+      },
+      mangle: {
+        safari10: true,
+      },
+    },
     rollupOptions: {
       output: {
+        // Optimización de chunks para móviles
         manualChunks: {
-          // Chunks optimizados para mejor caching
+          // Chunk principal con React
           vendor: ['react', 'react-dom'],
+          
+          // Chunk de Socket.io (cargado solo cuando sea necesario)
           socket: ['socket.io-client'],
-          motion: ['motion/react'],
+          
+          // Chunk de animaciones (solo en desktop)
+          motion: ['framer-motion'],
+          
+          // Chunk de emojis (cargado bajo demanda)
           emoji: ['emoji-picker-react'],
-          utils: ['@/utils/logger', '@/utils/formatters', '@/utils/performance'],
-          // Separar componentes pesados
-          components: [
-            '@/components/AuthForm',
-            '@/components/ChatSection',
-            '@/components/UsersList'
-          ]
         },
-        // Optimizar nombres de archivos para caching
+        
+        // Optimización de nombres de archivos
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-          return `js/[name]-[hash].js`;
+          return `js/${facadeModuleId}-[hash].js`;
         },
-        entryFileNames: 'js/[name]-[hash].js',
+        
+        // Optimización de assets
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
@@ -79,67 +62,72 @@ export default defineConfig({
             return `css/[name]-[hash][extname]`;
           }
           return `assets/[name]-[hash][extname]`;
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1000,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Eliminar console.log en producción
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
-        passes: 2
+        },
       },
-      mangle: {
-        safari10: true
+      
+      // Optimización de treeshaking
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        unknownGlobalSideEffects: false,
       },
-      format: {
-        comments: false
-      }
     },
-    // Optimizaciones adicionales
-    target: 'es2015',
-    assetsInlineLimit: 4096, // Inline assets pequeños
+    
+    // Optimización de CSS
     cssCodeSplit: true,
-    reportCompressedSize: false // Mejorar velocidad de build
+    
+    // Optimización de assets
+    assetsInlineLimit: 4096, // 4KB
+    
+    // Optimización de source maps
+    sourcemap: false,
+    
+    // Optimización de reporte de bundle
+    reportCompressedSize: true,
+    
+    // Optimización de chunk size warnings
+    chunkSizeWarningLimit: 1000,
   },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, './src'),
-      '@/components': resolve(__dirname, './src/components'),
-      '@/hooks': resolve(__dirname, './src/hooks'),
-      '@/contexts': resolve(__dirname, './src/contexts'),
-      '@/services': resolve(__dirname, './src/services'),
-      '@/types': resolve(__dirname, './src/types'),
-      '@/utils': resolve(__dirname, './src/utils'),
-      '@/styles': resolve(__dirname, './src/styles')
-    }
-  },
-  optimizeDeps: {
-    include: [
-      'react', 
-      'react-dom', 
-      'socket.io-client', 
-      'motion/react',
-      'emoji-picker-react'
-    ],
-    exclude: ['@vitejs/plugin-react']
-  },
+  
+  // Optimización de desarrollo
   server: {
-    hmr: {
-      overlay: false
-    },
-    port: 5173,
+    port: 3000,
     host: true,
-    open: true
   },
+  
+  // Optimización de preview
   preview: {
     port: 4173,
-    host: true
+    host: true,
   },
-  // Optimizaciones para desarrollo
-  esbuild: {
-    drop: ['console', 'debugger']
-  }
-});
+  
+  // Optimización de resolución
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+  
+  // Optimización de CSS
+  css: {
+    devSourcemap: false,
+  },
+  
+  // Optimización de dependencias
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+    ],
+    exclude: [
+      'socket.io-client', // Excluir para carga diferida
+      'emoji-picker-react', // Excluir para carga diferida
+      'framer-motion', // Excluir para carga diferida
+    ],
+  },
+  
+  // Optimización de define
+  define: {
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
+  },
+})
