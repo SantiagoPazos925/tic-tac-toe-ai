@@ -1,0 +1,268 @@
+/* Estilos para el demo del chat */
+.chat-demo-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.chat-demo-modal {
+    background: var(--discord-primary);
+    border: 1px solid var(--discord-border);
+    border-radius: var(--border-radius-lg);
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: var(--discord-shadow-popup);
+}
+
+.demo-header {
+    background: var(--discord-secondary);
+    border-bottom: 1px solid var(--discord-border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.demo-header h3 {
+    color: var(--discord-text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.demo-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--discord-border-light);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--discord-text-muted);
+    font-size: 0.875rem;
+}
+
+.demo-close-btn:hover {
+    background: var(--discord-danger);
+    color: white;
+    border-color: var(--discord-danger);
+    transform: scale(1.1);
+}
+
+.demo-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+.demo-features {
+    margin-bottom: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--discord-border-light);
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.feature-text h4 {
+    color: var(--discord-text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.feature-text p {
+    color: var(--discord-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.demo-messages {
+    border-top: 1px solid var(--discord-border);
+    padding-top: 1.5rem;
+}
+
+.demo-messages h4 {
+    color: var(--discord-text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.demo-message {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--discord-border-light);
+    border-radius: var(--border-radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.demo-message-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.demo-sender {
+    color: var(--discord-accent);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.demo-timestamp {
+    color: var(--discord-text-muted);
+    font-size: 0.75rem;
+}
+
+.demo-message-content p {
+    color: var(--discord-text-primary);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin: 0.5rem 0 0 0;
+}
+
+.demo-reply-preview {
+    background: rgba(88, 101, 242, 0.1);
+    border-left: 2px solid var(--discord-accent);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    color: var(--discord-text-secondary);
+}
+
+.demo-reactions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.demo-reaction {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--discord-border-light);
+    border-radius: 12px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--discord-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.demo-footer {
+    background: var(--discord-secondary);
+    border-top: 1px solid var(--discord-border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.demo-start-btn {
+    background: var(--discord-accent);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 0.75rem 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.demo-start-btn:hover {
+    background: var(--discord-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--discord-shadow-hover);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chat-demo-modal {
+        max-width: 95vw;
+        max-height: 90vh;
+    }
+    
+    .demo-content {
+        padding: 1rem;
+        max-height: 70vh;
+    }
+    
+    .feature-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .feature-icon {
+        margin-top: 0;
+    }
+    
+    .demo-message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-demo-overlay {
+        padding: 0.5rem;
+    }
+    
+    .demo-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .demo-header h3 {
+        font-size: 1rem;
+    }
+    
+    .demo-content {
+        padding: 0.75rem;
+    }
+    
+    .feature-item {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .demo-footer {
+        padding: 0.75rem 1rem;
+    }
+    
+    .demo-start-btn {
+        padding: 0.625rem 1.5rem;
+        font-size: 0.75rem;
+    }
+} 

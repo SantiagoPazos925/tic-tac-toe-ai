@@ -92,6 +92,14 @@ export interface Message {
     reactions: Reaction[];
     isEdited: boolean;
     editedAt?: Date;
+    replyTo?: ReplyMessage;
+}
+
+export interface ReplyMessage {
+    id: string;
+    sender: string;
+    content: string;
+    emoji?: string;
 }
 
 // Alias para compatibilidad con código existente

@@ -27,7 +27,7 @@ export class SocketService {
         });
 
         // Enviar mensaje del chat
-        socket.on('send-message', (messageData: { content: string }) => {
+        socket.on('send-message', (messageData: { content: string, replyTo?: string }) => {
             this.handleSendMessage(socket, messageData);
         });
 
@@ -139,7 +139,7 @@ export class SocketService {
         }
     }
 
-    private handleSendMessage(socket: Socket, messageData: { content: string }): void {
+    private handleSendMessage(socket: Socket, messageData: { content: string, replyTo?: string }): void {
         try {
             Logger.socket(`🔍 DEBUG: Recibido mensaje de socket ${socket.id}:`, messageData);
             
@@ -156,7 +156,7 @@ export class SocketService {
             }
             
             Logger.socket(`🔍 DEBUG: Procesando mensaje: "${messageData.content}"`);
-            const chatMessage = this.lobbyService.sendMessage(socket.id, messageData.content);
+            const chatMessage = this.lobbyService.sendMessage(socket.id, messageData.content, messageData.replyTo);
 
             if (chatMessage) {
                 Logger.socket(`✅ Mensaje enviado exitosamente por ${chatMessage.sender}: ${chatMessage.content}`);

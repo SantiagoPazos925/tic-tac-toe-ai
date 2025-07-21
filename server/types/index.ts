@@ -43,6 +43,7 @@ export interface ChatMessage {
     content: string;
     sender?: string;
     timestamp: Date;
+    replyTo?: string; // id del mensaje al que responde
 }
 
 // Tipos para autenticación

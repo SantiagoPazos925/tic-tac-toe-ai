@@ -9,6 +9,7 @@ import { SocketStatusIndicator } from './components/SocketOptimizer';
 import { SystemMessages } from './components/SystemMessages';
 import { UserContextMenu } from './components/UserContextMenu';
 
+import { ChatDemo } from './components/ChatDemo';
 import { UsersList } from './components/UsersList';
 import { useAuthContext } from './contexts/AuthContext';
 import { useLobbyContext } from './contexts/LobbyContext';
@@ -30,13 +31,11 @@ const App: React.FC = () => {
     messages,
     systemMessages,
     newMessage,
-    showStatusMenu,
     showUserContextMenu,
     contextMenuUser,
     contextMenuPosition,
     setNewMessage,
     handleSendMessage,
-    toggleStatusMenu,
     handleStatusChange,
     handleUserContextMenu,
     closeUserContextMenu,
@@ -45,10 +44,10 @@ const App: React.FC = () => {
     chatEndRef,
     systemMessagesEndRef,
     sendPing,
-    socketService
   } = useLobbyContext();
 
   const [isMobile, setIsMobile] = useState(false);
+  const [showChatDemo, setShowChatDemo] = useState(false);
 
   // Detectar si es móvil
   useEffect(() => {
@@ -206,6 +205,17 @@ const App: React.FC = () => {
 
             {/* Sección de chat (centro) */}
             <section className="chat-section">
+              {/* Botón para mostrar demo */}
+              <div className="chat-demo-button">
+                <button
+                  onClick={() => setShowChatDemo(true)}
+                  className="demo-trigger-btn"
+                  title="Ver nuevas funcionalidades del chat"
+                >
+                  🆕 Nuevas Funcionalidades
+                </button>
+              </div>
+              
               {/* Mensajes del sistema en la parte superior */}
               <SystemMessages
                 messages={systemMessages}
@@ -218,6 +228,7 @@ const App: React.FC = () => {
                 setNewMessage={setNewMessage}
                 handleSendMessage={handleSendMessage}
                 chatEndRef={chatEndRef}
+                currentUser={authUser?.username || ''}
               />
             </section>
 
@@ -273,8 +284,10 @@ const App: React.FC = () => {
           <SocketStatusIndicator />
         )}
 
-
-
+        {/* Demo de nuevas funcionalidades del chat */}
+        {showChatDemo && (
+          <ChatDemo onClose={() => setShowChatDemo(false)} />
+        )}
 
       </div>
     </LazySocketLoader>

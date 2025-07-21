@@ -9,6 +9,8 @@
 @import './components/user-profile.css';
 @import './components/lobby-header.css';
 @import './components/system-messages.css';
+@import './components/message-actions.css';
+@import './components/chat-demo.css';
 @import './components/context-menu.css';
 @import './components/virtualized-list.css';
 @import './components/virtualization-demo.css';

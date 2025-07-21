@@ -146,8 +146,8 @@ export class LobbyService {
     }
 
     // Enviar mensaje del chat
-    sendMessage(socketId: string, content: string): ChatMessage | null {
-        Logger.lobby(`🔍 DEBUG: sendMessage llamado con socketId: ${socketId}, content: "${content}"`);
+    sendMessage(socketId: string, content: string, replyTo?: string): ChatMessage | null {
+        Logger.lobby(`🔍 DEBUG: sendMessage llamado con socketId: ${socketId}, content: "${content}", replyTo: ${replyTo}`);
         Logger.lobby(`🔍 DEBUG: Usuarios conectados actualmente: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
         
         const user = this.connectedUsers.get(socketId);
@@ -168,7 +168,8 @@ export class LobbyService {
                 type: 'user',
                 content: validatedContent,
                 sender: user.name,
-                timestamp: new Date()
+                timestamp: new Date(),
+                ...(replyTo ? { replyTo } : {})
             };
 
             this.addChatMessage(chatMessage);

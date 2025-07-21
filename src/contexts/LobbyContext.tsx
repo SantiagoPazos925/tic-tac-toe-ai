@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { useLobbySocket } from '../hooks/useLobbySocket';
-import { ChatMessage, ContextMenuPosition, User } from '../types';
+import { ChatMessage, ContextMenuPosition, ReplyMessage, User } from '../types';
 import { useAuthContext } from './AuthContext';
 
 interface LobbyContextType {
@@ -26,7 +26,7 @@ interface LobbyContextType {
   // Funciones
   setNewMessage: (message: string) => void;
   sendMessage: () => void;
-  handleSendMessage: (e: React.FormEvent) => void;
+  handleSendMessage: (e: React.FormEvent, replyTo?: ReplyMessage | null) => void;
   toggleStatusMenu: () => void;
   handleStatusChange: (status: string) => void;
   handleUserContextMenu: (e: React.MouseEvent, user: User) => void;
@@ -95,11 +95,11 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     }
   }, [newMessage, authUser, socketService]);
 
-  const handleSendMessage = useCallback((e: React.FormEvent) => {
+  const handleSendMessage = useCallback((e: React.FormEvent, replyTo?: ReplyMessage | null) => {
     e.preventDefault();
     if (newMessage.trim() && authUser) {
       console.log('🔍 DEBUG: Enviando mensaje desde handleSendMessage:', newMessage.trim());
-      socketService.sendMessage(newMessage.trim());
+      socketService.sendMessage(newMessage.trim(), replyTo);
       setNewMessage('');
     }
   }, [newMessage, authUser, socketService]);

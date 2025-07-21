@@ -131,12 +131,47 @@ export const useLobbySocket = () => {
         // Eventos del chat
         socketService.onChatHistory((messages: ChatMessage[]) => {
             Logger.socket('Historial de chat recibido:', messages.length, 'mensajes');
-            setChatMessages(messages);
+            // Transformar replyTo si es necesario
+            const fixedMessages: ChatMessage[] = messages.map(msg => {
+                if (msg.replyTo && typeof msg.replyTo === 'string') {
+                    const original = messages.find(m => m.id === (msg.replyTo as unknown as string));
+                    if (original) {
+                        return {
+                            ...msg,
+                            replyTo: {
+                                id: original.id,
+                                sender: typeof original.sender === 'string' ? original.sender : original.sender?.username || 'Usuario',
+                                content: original.content,
+                                emoji: (original.reactions && original.reactions[0] && original.reactions[0].emoji) ? original.reactions[0].emoji : ''
+                            }
+                        };
+                    }
+                }
+                return msg;
+            });
+            setChatMessages(fixedMessages);
         });
 
         socketService.onChatMessage((message: ChatMessage) => {
             Logger.socket('Mensaje de chat recibido:', message);
-            setChatMessages(prev => [...prev, message]);
+            setChatMessages(prev => {
+                let fixedMessage = message;
+                if (message.replyTo && typeof message.replyTo === 'string') {
+                    const original = prev.find(m => m.id === (message.replyTo as unknown as string));
+                    if (original) {
+                        fixedMessage = {
+                            ...message,
+                            replyTo: {
+                                id: original.id,
+                                sender: typeof original.sender === 'string' ? original.sender : original.sender?.username || 'Usuario',
+                                content: original.content,
+                                emoji: (original.reactions && original.reactions[0] && original.reactions[0].emoji) ? original.reactions[0].emoji : ''
+                            }
+                        };
+                    }
+                }
+                return [...prev, fixedMessage];
+            });
         });
 
         // Evento para confirmar que el usuario se unió al lobby

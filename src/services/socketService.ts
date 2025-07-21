@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { ChatMessage, User } from '../types';
+import { ChatMessage, ReplyMessage, User } from '../types';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -105,13 +105,16 @@ class SocketService {
     }
 
     // Eventos del chat
-    sendMessage(content: string): void {
+    sendMessage(content: string, replyTo?: ReplyMessage | null): void {
         if (this.socket) {
             const trimmedContent = content.trim();
-            console.log('🔍 DEBUG: Enviando mensaje:', { content: trimmedContent });
+            console.log('🔍 DEBUG: Enviando mensaje:', { content: trimmedContent, replyTo });
             
-            // El servidor espera solo { content: string }
-            this.socket.emit('send-message', { content: trimmedContent });
+            // Enviar mensaje con replyTo si existe
+            this.socket.emit('send-message', { 
+                content: trimmedContent,
+                replyTo: replyTo ? replyTo.id : undefined
+            });
         }
     }
 
