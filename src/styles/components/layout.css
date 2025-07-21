@@ -18,7 +18,7 @@
 /* Container del lobby */
 .lobby-container {
   display: grid;
-  grid-template-columns: 250px 1fr 300px;
+  grid-template-columns: 250px 1fr 500px;
   grid-template-rows: 1fr;
   height: 100%;
   gap: 1px;
@@ -163,6 +163,33 @@
 .users-sidebar {
   background: var(--discord-tertiary);
   border-left: 1px solid var(--discord-border);
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  width: 500px;
+}
+
+/* Columna de usuarios */
+.users-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--discord-border);
+}
+
+/* Columna de mensajes del sistema */
+.system-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Sección de juegos (centro) */
+.game-section {
+  background: var(--discord-bg);
   display: flex;
   flex-direction: column;
   overflow: hidden;

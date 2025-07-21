@@ -129,7 +129,7 @@ export const UsersList = ({
                         </div>
                         <div className="profile-actions">
                             <span className="status-indicator" style={{ color: getStatusColor(currentUser.status) }}>
-                                ●
+                                ▼
                             </span>
                         </div>
                     </div>
@@ -157,7 +157,7 @@ export const UsersList = ({
                                                     setShowStatusPopup(false);
                                                 }}
                                             >
-                                                <span className="status-dot online">●</span>
+                                                <div className="status-dot online"></div>
                                                 <span>En línea</span>
                                             </button>
                                             <button 
@@ -167,7 +167,7 @@ export const UsersList = ({
                                                     setShowStatusPopup(false);
                                                 }}
                                             >
-                                                <span className="status-dot away">●</span>
+                                                <div className="status-dot away"></div>
                                                 <span>Ausente</span>
                                             </button>
                                         </>

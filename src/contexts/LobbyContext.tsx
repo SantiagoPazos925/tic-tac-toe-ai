@@ -17,6 +17,9 @@ interface LobbyContextType {
   systemMessages: ChatMessage[];
   newMessage: string;
   
+  // Juegos
+  selectedGameId: string | null;
+  
   // UI State
   showStatusMenu: boolean;
   showUserContextMenu: boolean;
@@ -27,6 +30,7 @@ interface LobbyContextType {
   setNewMessage: (message: string) => void;
   sendMessage: () => void;
   handleSendMessage: (e: React.FormEvent, replyTo?: ReplyMessage | null) => void;
+  handleGameSelect: (gameId: string) => void;
   toggleStatusMenu: () => void;
   handleStatusChange: (status: string) => void;
   handleUserContextMenu: (e: React.MouseEvent, user: User) => void;
@@ -75,6 +79,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
 
   // Estado local
   const [newMessage, setNewMessage] = useState('');
+  const [selectedGameId, setSelectedGameId] = useState<string | null>('tic-tac-toe');
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showUserContextMenu, setShowUserContextMenu] = useState(false);
   const [contextMenuUser, setContextMenuUser] = useState<User | null>(null);
@@ -146,6 +151,11 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     }
   }, [contextMenuUser, closeUserContextMenu]);
 
+  const handleGameSelect = useCallback((gameId: string) => {
+    setSelectedGameId(gameId);
+    console.log('🎮 Juego seleccionado:', gameId);
+  }, []);
+
   const handleLogout = useCallback(() => {
     logout();
   }, [logout]);
@@ -164,6 +174,9 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     systemMessages,
     newMessage,
     
+    // Juegos
+    selectedGameId,
+    
     // UI State
     showStatusMenu,
     showUserContextMenu,
@@ -174,6 +187,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     setNewMessage,
     sendMessage,
     handleSendMessage,
+    handleGameSelect,
     toggleStatusMenu,
     handleStatusChange,
     handleUserContextMenu,

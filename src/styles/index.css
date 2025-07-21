@@ -9,6 +9,7 @@
 @import './components/user-profile.css';
 @import './components/lobby-header.css';
 @import './components/system-messages.css';
+@import './components/game-list.css';
 @import './components/message-actions.css';
 @import './components/chat-demo.css';
 @import './components/context-menu.css';

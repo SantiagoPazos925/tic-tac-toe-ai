@@ -9,7 +9,10 @@ interface SystemMessagesProps {
     systemMessagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export const SystemMessages = ({ messages, systemMessagesEndRef }: SystemMessagesProps) => {
+export const SystemMessages = ({ 
+    messages, 
+    systemMessagesEndRef
+}: SystemMessagesProps) => {
     const systemMessages = messages.filter(message => message.type === 'system');
 
     if (systemMessages.length === 0) return null;

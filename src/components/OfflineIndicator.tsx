@@ -1,5 +1,5 @@
+import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useServiceWorker } from '../hooks/useServiceWorker';
 
 interface OfflineIndicatorProps {
@@ -21,58 +21,61 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ className = 
 
     return (
         <>
-            {/* Indicador de estado offline */}
-            <AnimatePresence>
-                {isOffline && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -50 }}
-                        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-discord-warning text-discord-text-primary px-4 py-2 rounded-md shadow-lg flex items-center gap-2 ${className}`}
-                    >
-                        <div className="w-2 h-2 bg-discord-warning rounded-full animate-pulse"></div>
-                        <span className="text-sm font-medium">Modo offline</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Indicador de actualización disponible */}
-            <AnimatePresence>
-                {isUpdated && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -50 }}
-                        className={`fixed top-4 right-4 z-50 bg-discord-accent text-white px-4 py-2 rounded-md shadow-lg flex items-center gap-2 ${className}`}
-                    >
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                        <span className="text-sm font-medium">Nueva versión disponible</span>
-                        <button
-                            onClick={skipWaiting}
-                            className="ml-2 px-2 py-1 bg-white bg-opacity-20 rounded text-xs hover:bg-opacity-30 transition-all"
+            {/* Contenedor de indicadores en la esquina superior derecha */}
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {/* Indicador de estado offline */}
+                <AnimatePresence>
+                    {isOffline && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 50 }}
+                            className={`bg-discord-warning text-discord-text-primary px-4 py-2 rounded-md shadow-lg flex items-center gap-2 ${className}`}
                         >
-                            Actualizar
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <div className="w-2 h-2 bg-discord-warning rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium">Modo offline</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-            {/* Indicador de estado del Service Worker */}
-            <AnimatePresence>
-                {isInstalled && !isOffline && !isUpdated && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className={`fixed bottom-4 right-4 z-40 bg-discord-success bg-opacity-20 text-discord-success px-3 py-1 rounded-full text-xs ${className}`}
-                    >
-                        <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-discord-success rounded-full"></div>
-                            <span>App instalada</span>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                {/* Indicador de actualización disponible */}
+                <AnimatePresence>
+                    {isUpdated && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 50 }}
+                            className={`bg-discord-accent text-white px-4 py-2 rounded-md shadow-lg flex items-center gap-2 ${className}`}
+                        >
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                            <span className="text-sm font-medium">Nueva versión disponible</span>
+                            <button
+                                onClick={skipWaiting}
+                                className="ml-2 px-2 py-1 bg-white bg-opacity-20 rounded text-xs hover:bg-opacity-30 transition-all"
+                            >
+                                Actualizar
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Indicador de estado del Service Worker */}
+                <AnimatePresence>
+                    {isInstalled && !isOffline && !isUpdated && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 50 }}
+                            className={`bg-discord-success bg-opacity-20 text-discord-success px-3 py-1 rounded-full text-xs ${className}`}
+                        >
+                            <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 bg-discord-success rounded-full"></div>
+                                <span>App instalada</span>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </>
     );
 };

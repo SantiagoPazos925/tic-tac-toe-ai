@@ -9,6 +9,8 @@
     min-height: 0;
     overflow: hidden;
     position: relative;
+    border-top: 1px solid var(--discord-border);
+    height: 100%;
 }
 
 .chat-section::before {

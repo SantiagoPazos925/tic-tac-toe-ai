@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AuthForm } from './components/AuthForm';
 import { ChatSection } from './components/ChatSection';
+import { GameList } from './components/GameSlider';
 import { LazySocketLoader } from './components/LazySocketLoader';
 import { LobbyHeader } from './components/LobbyHeader';
 import { MobileNavigation } from './components/MobileNavigation';
@@ -31,11 +32,13 @@ const App: React.FC = () => {
     messages,
     systemMessages,
     newMessage,
+    selectedGameId,
     showUserContextMenu,
     contextMenuUser,
     contextMenuPosition,
     setNewMessage,
     handleSendMessage,
+    handleGameSelect,
     handleStatusChange,
     handleUserContextMenu,
     closeUserContextMenu,
@@ -203,8 +206,8 @@ const App: React.FC = () => {
               </div>
             </aside>
 
-            {/* Sección de chat (centro) */}
-            <section className="chat-section">
+            {/* Sección central con Game List */}
+            <section className="game-section">
               {/* Botón para mostrar demo */}
               <div className="chat-demo-button">
                 <button
@@ -216,31 +219,43 @@ const App: React.FC = () => {
                 </button>
               </div>
               
-              {/* Mensajes del sistema en la parte superior */}
-              <SystemMessages
-                messages={systemMessages}
-                systemMessagesEndRef={systemMessagesEndRef}
-              />
-              
-              <ChatSection
-                messages={messages}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                handleSendMessage={handleSendMessage}
-                chatEndRef={chatEndRef}
-                currentUser={authUser?.username || ''}
+              {/* Game List en la parte superior */}
+              <GameList
+                onGameSelect={handleGameSelect}
+                selectedGameId={selectedGameId}
               />
             </section>
 
-            {/* Lista de usuarios (derecha) */}
+            {/* Sidebar derecho con dos columnas */}
             <aside className="users-sidebar">
-              <UsersList
-                users={users}
-                onUserContextMenu={handleUserContextMenu}
-                onStatusChange={handleStatusChange}
-                onLogout={handleLogout}
-                currentUser={currentUser}
-              />
+              {/* Columna 2: Mensajes del sistema y Chat */}
+              <div className="system-column">
+                <SystemMessages
+                  messages={systemMessages}
+                  systemMessagesEndRef={systemMessagesEndRef}
+                />
+                
+                <ChatSection
+                  messages={messages}
+                  newMessage={newMessage}
+                  setNewMessage={setNewMessage}
+                  handleSendMessage={handleSendMessage}
+                  chatEndRef={chatEndRef}
+                  currentUser={authUser?.username || ''}
+                />
+              </div>
+              {/* Columna 1: Lista de usuarios */}
+              <div className="users-column">
+                <UsersList
+                  users={users}
+                  onUserContextMenu={handleUserContextMenu}
+                  onStatusChange={handleStatusChange}
+                  onLogout={handleLogout}
+                  currentUser={currentUser}
+                />
+              </div>
+              
+              
             </aside>
           </div>
 
